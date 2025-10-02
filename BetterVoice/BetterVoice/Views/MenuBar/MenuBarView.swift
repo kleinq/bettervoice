@@ -54,7 +54,7 @@ struct MenuBarView: View {
                             .fill(Color.orange)
                             .frame(width: 6, height: 6)
 
-                        Text("Learning from edits...")
+                        Text(learningStatusText)
                             .font(.caption2)
                             .foregroundColor(.orange)
                     }
@@ -197,6 +197,18 @@ struct MenuBarView: View {
         case .pasting: return "Pasting..."
         case .error(let message): return "Error: \(message)"
         }
+    }
+
+    private var learningStatusText: String {
+        if let method = ClipboardMonitor.shared.currentDetectionMethod {
+            switch method {
+            case .accessibility:
+                return "Learning (Accessibility)"
+            case .clipboard:
+                return "Learning (Clipboard)"
+            }
+        }
+        return "Learning (Hybrid mode)"
     }
 
     private var statusColor: Color {

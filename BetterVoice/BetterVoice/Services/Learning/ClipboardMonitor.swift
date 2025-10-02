@@ -2,13 +2,19 @@
 //  ClipboardMonitor.swift
 //  BetterVoice
 //
-//  Monitors clipboard for user edits after paste with variable timeout
+//  Hybrid monitoring: Accessibility API + Clipboard
+//  Detects user edits via focused text field (primary) or clipboard (fallback)
 //  Detects significant changes (>10% difference) per FR-017
 //  Timeout calculation: 1 minute per 100 characters (min 2 min, max 10 min)
 //
 
 import Foundation
 import AppKit
+
+enum LearningDetectionMethod {
+    case accessibility
+    case clipboard
+}
 
 final class ClipboardMonitor {
 
@@ -17,13 +23,19 @@ final class ClipboardMonitor {
     static let shared = ClipboardMonitor()
     private init() {}
 
+    // MARK: - Dependencies
+
+    private let accessibilityReader = AccessibilityTextReader.shared
+
     // MARK: - Properties
 
     private var isMonitoring = false
     private var originalText: String?
     private var editedText: String?
+    private var detectionMethod: LearningDetectionMethod?
     private var monitoringTask: Task<Void, Never>?
     private var lastChangeCount: Int = 0
+    private var lastAccessibilityCheck: Date?
     private var startTime: Date?
 
     // MARK: - Public Methods
@@ -38,19 +50,21 @@ final class ClipboardMonitor {
         return min(max(calculatedTimeout, minimumTimeout), maximumTimeout)
     }
 
-    /// Start monitoring clipboard for changes
+    /// Start hybrid monitoring (Accessibility + Clipboard)
     func startMonitoring(originalText: String, timeout: TimeInterval) async {
         self.originalText = originalText
         self.editedText = nil
+        self.detectionMethod = nil
         self.isMonitoring = true
         self.lastChangeCount = NSPasteboard.general.changeCount
+        self.lastAccessibilityCheck = Date()
         self.startTime = Date()
 
-        Logger.shared.info("Started clipboard monitoring for \(Int(timeout))s (\(originalText.count) chars)")
+        Logger.shared.info("Started hybrid monitoring for \(Int(timeout))s (\(originalText.count) chars)")
 
         // Start background monitoring task
         monitoringTask = Task {
-            await monitorClipboard(timeout: timeout)
+            await monitorHybrid(timeout: timeout)
         }
     }
 
@@ -63,12 +77,18 @@ final class ClipboardMonitor {
         monitoringTask = nil
 
         let elapsed = startTime.map { Date().timeIntervalSince($0) } ?? 0
-        Logger.shared.info("Stopped clipboard monitoring after \(Int(elapsed))s")
+        let method = detectionMethod.map { "\($0)" } ?? "none"
+        Logger.shared.info("Stopped monitoring after \(Int(elapsed))s (detected via: \(method))")
     }
 
     /// Get edited text if detected
     func getEditedText() async -> String? {
         return editedText
+    }
+
+    /// Get detection method used
+    var currentDetectionMethod: LearningDetectionMethod? {
+        return detectionMethod
     }
 
     /// Check if currently monitoring
@@ -85,47 +105,97 @@ final class ClipboardMonitor {
 
     // MARK: - Private Methods
 
-    private func monitorClipboard(timeout: TimeInterval) async {
+    /// Hybrid monitoring: Accessibility API (every 5s) + Clipboard (every 500ms)
+    private func monitorHybrid(timeout: TimeInterval) async {
         let startTime = Date()
-        let checkInterval: TimeInterval = 0.5 // Check every 500ms
+        let clipboardCheckInterval: TimeInterval = 0.5 // Check every 500ms
+        let accessibilityCheckInterval: TimeInterval = 5.0 // Check every 5 seconds
 
         while isMonitoring && Date().timeIntervalSince(startTime) < timeout {
-            // Check if clipboard changed
-            let currentChangeCount = NSPasteboard.general.changeCount
+            // 1. Check clipboard (fast, every 500ms)
+            if await checkClipboard() {
+                break // Found edit
+            }
 
-            if currentChangeCount != lastChangeCount {
-                lastChangeCount = currentChangeCount
-
-                // Get clipboard content
-                if let clipboardString = NSPasteboard.general.string(forType: .string) {
-                    // Check if it's different from original
-                    if let original = originalText, clipboardString != original {
-                        // Calculate difference
-                        let distance = calculateEditDistance(original, clipboardString)
-                        let maxLength = max(original.count, clipboardString.count)
-
-                        if maxLength > 0 {
-                            let similarity = 1.0 - (Double(distance) / Double(maxLength))
-
-                            // Significant change if <90% similar (>10% different)
-                            if similarity < 0.9 {
-                                editedText = clipboardString
-                                Logger.shared.info("Detected significant clipboard edit: \(Int(similarity * 100))% similar")
-
-                                // Stop monitoring after first significant edit
-                                isMonitoring = false
-                                break
-                            }
-                        }
-                    }
+            // 2. Check accessibility (slower, every 5 seconds)
+            if let lastCheck = lastAccessibilityCheck,
+               Date().timeIntervalSince(lastCheck) >= accessibilityCheckInterval {
+                if await checkAccessibility() {
+                    break // Found edit
                 }
+                lastAccessibilityCheck = Date()
             }
 
             // Wait before next check
-            try? await Task.sleep(nanoseconds: UInt64(checkInterval * 1_000_000_000))
+            try? await Task.sleep(nanoseconds: UInt64(clipboardCheckInterval * 1_000_000_000))
         }
 
-        Logger.shared.debug("Clipboard monitoring completed")
+        Logger.shared.debug("Hybrid monitoring completed")
+    }
+
+    /// Check clipboard for changes
+    private func checkClipboard() async -> Bool {
+        let currentChangeCount = NSPasteboard.general.changeCount
+
+        guard currentChangeCount != lastChangeCount else { return false }
+
+        lastChangeCount = currentChangeCount
+
+        // Get clipboard content
+        guard let clipboardString = NSPasteboard.general.string(forType: .string),
+              let original = originalText,
+              clipboardString != original else {
+            return false
+        }
+
+        // Calculate difference
+        let distance = calculateEditDistance(original, clipboardString)
+        let maxLength = max(original.count, clipboardString.count)
+
+        guard maxLength > 0 else { return false }
+
+        let similarity = 1.0 - (Double(distance) / Double(maxLength))
+
+        // Significant change if <90% similar (>10% different)
+        if similarity < 0.9 {
+            editedText = clipboardString
+            detectionMethod = .clipboard
+            Logger.shared.info("✓ Detected edit via CLIPBOARD: \(Int(similarity * 100))% similar")
+            isMonitoring = false
+            return true
+        }
+
+        return false
+    }
+
+    /// Check focused text field via Accessibility API
+    private func checkAccessibility() async -> Bool {
+        // Get focused text field content
+        guard let focusedText = accessibilityReader.getFocusedTextFieldContent(),
+              let original = originalText,
+              focusedText != original else {
+            return false
+        }
+
+        // Calculate difference
+        let distance = calculateEditDistance(original, focusedText)
+        let maxLength = max(original.count, focusedText.count)
+
+        guard maxLength > 0 else { return false }
+
+        let similarity = 1.0 - (Double(distance) / Double(maxLength))
+
+        // Significant change if <90% similar (>10% different)
+        if similarity < 0.9 {
+            editedText = focusedText
+            detectionMethod = .accessibility
+            let appName = accessibilityReader.getFocusedApplicationName() ?? "unknown"
+            Logger.shared.info("✓ Detected edit via ACCESSIBILITY (\(appName)): \(Int(similarity * 100))% similar")
+            isMonitoring = false
+            return true
+        }
+
+        return false
     }
 
     /// Calculate Levenshtein distance

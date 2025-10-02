@@ -160,6 +160,19 @@ final class AppState: ObservableObject {
             .store(in: &cancellables)
     }
 
+    // MARK: - Public Control Methods
+
+    /// Stop learning observation manually
+    func stopLearning() async {
+        guard learningObservationTask != nil else { return }
+
+        learningObservationTask?.cancel()
+        learningObservationTask = nil
+        await ClipboardMonitor.shared.stopMonitoring()
+
+        Logger.shared.info("Learning observation stopped manually")
+    }
+
     // MARK: - Workflow Orchestration
 
     private func handleHotkeyPress() async {
@@ -293,14 +306,18 @@ final class AppState: ObservableObject {
             // Learn from edits (run in background, don't block)
             if preferences.learningSystemEnabled {
                 let context = appDetectionService.detectContext()
+                let timeout = ClipboardMonitor.calculateTimeout(for: enhancedText)
+
                 learningObservationTask = Task { [weak self] in
                     await learningService.observe(
                         originalText: enhancedText,
                         documentType: context.documentType,
-                        timeoutSeconds: 10
+                        timeoutSeconds: Int(timeout)
                     )
                     self?.learningObservationTask = nil
                 }
+
+                Logger.shared.info("Learning observation started: \(Int(timeout))s timeout for \(enhancedText.count) chars")
             }
 
             // Reset to ready (don't wait for learning observation)

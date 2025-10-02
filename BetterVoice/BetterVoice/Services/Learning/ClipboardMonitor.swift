@@ -2,8 +2,9 @@
 //  ClipboardMonitor.swift
 //  BetterVoice
 //
-//  Monitors clipboard for user edits after paste (10-second observation window)
+//  Monitors clipboard for user edits after paste with variable timeout
 //  Detects significant changes (>10% difference) per FR-017
+//  Timeout calculation: 1 minute per 100 characters (min 2 min, max 10 min)
 //
 
 import Foundation
@@ -23,8 +24,19 @@ final class ClipboardMonitor {
     private var editedText: String?
     private var monitoringTask: Task<Void, Never>?
     private var lastChangeCount: Int = 0
+    private var startTime: Date?
 
     // MARK: - Public Methods
+
+    /// Calculate timeout based on text length: 1 minute per 100 characters (min 2 min, max 10 min)
+    static func calculateTimeout(for text: String) -> TimeInterval {
+        let charactersPerMinute = 100.0
+        let minimumTimeout: TimeInterval = 120 // 2 minutes
+        let maximumTimeout: TimeInterval = 600 // 10 minutes
+
+        let calculatedTimeout = TimeInterval(text.count) / charactersPerMinute * 60.0
+        return min(max(calculatedTimeout, minimumTimeout), maximumTimeout)
+    }
 
     /// Start monitoring clipboard for changes
     func startMonitoring(originalText: String, timeout: TimeInterval) async {
@@ -32,8 +44,9 @@ final class ClipboardMonitor {
         self.editedText = nil
         self.isMonitoring = true
         self.lastChangeCount = NSPasteboard.general.changeCount
+        self.startTime = Date()
 
-        Logger.shared.debug("Started clipboard monitoring for \(timeout)s")
+        Logger.shared.info("Started clipboard monitoring for \(Int(timeout))s (\(originalText.count) chars)")
 
         // Start background monitoring task
         monitoringTask = Task {
@@ -43,16 +56,31 @@ final class ClipboardMonitor {
 
     /// Stop monitoring
     func stopMonitoring() async {
+        guard isMonitoring else { return }
+
         isMonitoring = false
         monitoringTask?.cancel()
         monitoringTask = nil
 
-        Logger.shared.debug("Stopped clipboard monitoring")
+        let elapsed = startTime.map { Date().timeIntervalSince($0) } ?? 0
+        Logger.shared.info("Stopped clipboard monitoring after \(Int(elapsed))s")
     }
 
     /// Get edited text if detected
     func getEditedText() async -> String? {
         return editedText
+    }
+
+    /// Check if currently monitoring
+    var isActive: Bool {
+        return isMonitoring
+    }
+
+    /// Get remaining monitoring time
+    func getRemainingTime(timeout: TimeInterval) -> TimeInterval? {
+        guard let startTime = startTime, isMonitoring else { return nil }
+        let elapsed = Date().timeIntervalSince(startTime)
+        return max(0, timeout - elapsed)
     }
 
     // MARK: - Private Methods

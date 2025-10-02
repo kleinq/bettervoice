@@ -46,6 +46,20 @@ struct MenuBarView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+
+                // Learning indicator
+                if ClipboardMonitor.shared.isActive {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.orange)
+                            .frame(width: 6, height: 6)
+
+                        Text("Learning from edits...")
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.top, 2)
+                }
             }
             .padding()
 
@@ -83,6 +97,25 @@ struct MenuBarView: View {
             }
 
             Divider()
+
+            // Stop Learning (if active)
+            if ClipboardMonitor.shared.isActive {
+                Button {
+                    Task {
+                        await appState.stopLearning()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "stop.circle")
+                        Text("Stop Learning")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(MenuButtonStyle())
+                .padding(.horizontal, 4)
+
+                Divider()
+            }
 
             // Settings
             if #available(macOS 14.0, *) {

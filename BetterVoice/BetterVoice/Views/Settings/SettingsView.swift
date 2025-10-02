@@ -19,9 +19,9 @@ struct SettingsView: View {
                     Label("General", systemImage: "gear")
                 }
 
-            AudioSettingsView()
+            AudioFeedbackTab(preferencesStore: preferencesStore)
                 .tabItem {
-                    Label("Audio", systemImage: "waveform")
+                    Label("Audio Feedback", systemImage: "speaker.wave.2")
                 }
 
             ModelSettingsView()
@@ -34,7 +34,7 @@ struct SettingsView: View {
                     Label("Cloud", systemImage: "cloud")
                 }
         }
-        .frame(width: 500, height: 400)
+        .frame(width: 700, height: 500)
     }
 }
 

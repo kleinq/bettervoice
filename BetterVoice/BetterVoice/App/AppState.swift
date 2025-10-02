@@ -236,13 +236,13 @@ final class AppState: ObservableObject {
             recordingStartTime = Date()
 
             // Play start sound
-            soundPlayer.playIfEnabled(.recordingStart, preferences: preferences)
+            soundPlayer.playEvent(.recordingStart, preferences: preferences)
 
             Logger.shared.info("Recording started")
         } catch {
             Logger.shared.error("Failed to start recording", error: error)
             status = .error("Failed to start recording")
-            soundPlayer.playIfEnabled(.error, preferences: preferencesStore.preferences)
+            soundPlayer.playEvent(.error, preferences: preferencesStore.preferences)
         }
     }
 
@@ -256,7 +256,7 @@ final class AppState: ObservableObject {
 
             // Play stop sound
             let preferences = preferencesStore.preferences
-            soundPlayer.playIfEnabled(.recordingStop, preferences: preferences)
+            soundPlayer.playEvent(.recordingStop, preferences: preferences)
 
             let recordingDuration = recordingStartTime.map { Date().timeIntervalSince($0) } ?? 0
             Logger.shared.info("Recorded \(recordingDuration)s of audio, \(audioData.count) bytes")
@@ -288,7 +288,7 @@ final class AppState: ObservableObject {
             try await paste(text: enhancedText)
 
             // Play completion sound
-            soundPlayer.playIfEnabled(.paste, preferences: preferences)
+            soundPlayer.playEvent(.paste, preferences: preferences)
 
             // Learn from edits (run in background, don't block)
             if preferences.learningSystemEnabled {
@@ -316,7 +316,7 @@ final class AppState: ObservableObject {
 
             // Play error sound
             let preferences = preferencesStore.preferences
-            soundPlayer.playIfEnabled(.error, preferences: preferences)
+            soundPlayer.playEvent(.error, preferences: preferences)
 
             // Reset to ready after error
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {

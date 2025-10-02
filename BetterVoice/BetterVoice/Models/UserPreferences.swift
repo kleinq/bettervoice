@@ -22,6 +22,11 @@ struct UserPreferences: Codable, @unchecked Sendable {
     var selectedModelSize: WhisperModelSize
     var selectedAudioInputDeviceUID: String?
     var audioFeedbackEnabled: Bool
+    var recordingStartSound: String
+    var recordingStopSound: String
+    var processingCompleteSound: String
+    var errorSound: String
+    var pasteSound: String
     var visualOverlayEnabled: Bool
     var learningSystemEnabled: Bool
     var externalLLMEnabled: Bool
@@ -50,6 +55,11 @@ struct UserPreferences: Codable, @unchecked Sendable {
         selectedModelSize: WhisperModelSize = .base,
         selectedAudioInputDeviceUID: String? = nil,
         audioFeedbackEnabled: Bool = true,
+        recordingStartSound: String = "Ping",
+        recordingStopSound: String = "Pop",
+        processingCompleteSound: String = "Glass",
+        errorSound: String = "Basso",
+        pasteSound: String = "Morse",
         visualOverlayEnabled: Bool = true,
         learningSystemEnabled: Bool = true,
         externalLLMEnabled: Bool = false,
@@ -69,6 +79,11 @@ struct UserPreferences: Codable, @unchecked Sendable {
         self.selectedModelSize = selectedModelSize
         self.selectedAudioInputDeviceUID = selectedAudioInputDeviceUID
         self.audioFeedbackEnabled = audioFeedbackEnabled
+        self.recordingStartSound = recordingStartSound
+        self.recordingStopSound = recordingStopSound
+        self.processingCompleteSound = processingCompleteSound
+        self.errorSound = errorSound
+        self.pasteSound = pasteSound
         self.visualOverlayEnabled = visualOverlayEnabled
         self.learningSystemEnabled = learningSystemEnabled
         self.externalLLMEnabled = externalLLMEnabled

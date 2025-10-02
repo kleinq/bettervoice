@@ -9,15 +9,12 @@
 import Foundation
 import AppKit
 
-enum SystemSound: String {
-    case recordingStart = "Ping"        // Subtle ping sound
-    case recordingStop = "Pop"          // Pop sound
-    case processingComplete = "Glass"   // Success chime
-    case error = "Basso"               // Alert sound
-    case paste = "Morse"               // Quick beep
-
-    // Alternative sounds you can use:
-    // "Blow", "Bottle", "Frog", "Funk", "Hero", "Submarine", "Tink"
+enum SystemSoundEvent {
+    case recordingStart
+    case recordingStop
+    case processingComplete
+    case error
+    case paste
 }
 
 final class SoundPlayer {
@@ -25,15 +22,32 @@ final class SoundPlayer {
     static let shared = SoundPlayer()
     private init() {}
 
-    /// Play a system sound
-    func play(_ sound: SystemSound) {
-        NSSound(named: sound.rawValue)?.play()
+    /// Play a system sound by name
+    func play(_ soundName: String) {
+        // Skip if sound is "None"
+        guard soundName != "None" else { return }
+        NSSound(named: soundName)?.play()
     }
 
-    /// Play a system sound if audio feedback is enabled
-    func playIfEnabled(_ sound: SystemSound, preferences: UserPreferences) {
+    /// Play a system sound for an event using user preferences
+    func playEvent(_ event: SystemSoundEvent, preferences: UserPreferences) {
         guard preferences.audioFeedbackEnabled else { return }
-        play(sound)
+
+        let soundName: String
+        switch event {
+        case .recordingStart:
+            soundName = preferences.recordingStartSound
+        case .recordingStop:
+            soundName = preferences.recordingStopSound
+        case .processingComplete:
+            soundName = preferences.processingCompleteSound
+        case .error:
+            soundName = preferences.errorSound
+        case .paste:
+            soundName = preferences.pasteSound
+        }
+
+        play(soundName)
     }
 
     /// List all available system sounds

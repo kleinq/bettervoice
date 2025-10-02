@@ -14,9 +14,11 @@ struct MenuButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(isHovered || configuration.isPressed ? Color.accentColor.opacity(0.15) : Color.clear)
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isHovered || configuration.isPressed ? Color.accentColor.opacity(0.8) : Color.clear)
             )
             .onHover { hovering in
                 isHovered = hovering
@@ -63,8 +65,7 @@ struct MenuBarView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(MenuButtonStyle())
-                .padding(.horizontal)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
             } else if appState.isRecording {
                 Button {
                     Task {
@@ -78,8 +79,7 @@ struct MenuBarView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(MenuButtonStyle())
-                .padding(.horizontal)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
             }
 
             Divider()
@@ -92,10 +92,9 @@ struct MenuBarView: View {
                         Text("Settings...")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.vertical, 6)
                 }
                 .buttonStyle(MenuButtonStyle())
+                .padding(.horizontal, 4)
             } else {
                 Button {
                     openSettingsWindowLegacy()
@@ -107,8 +106,7 @@ struct MenuBarView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(MenuButtonStyle())
-                .padding(.horizontal)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
             }
 
             // View Logs
@@ -122,8 +120,7 @@ struct MenuBarView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(MenuButtonStyle())
-            .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
 
             Divider()
 
@@ -138,8 +135,7 @@ struct MenuBarView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(MenuButtonStyle())
-            .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
 
             Divider()
 
@@ -154,8 +150,7 @@ struct MenuBarView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(MenuButtonStyle())
-            .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
         }
         .frame(width: 250)
     }

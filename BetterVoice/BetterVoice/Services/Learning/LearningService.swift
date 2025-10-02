@@ -53,12 +53,12 @@ final class LearningService: LearningServiceProtocol {
 
         // Check if user edited the text
         if let editedText = await clipboardMonitor.getEditedText() {
-            // Calculate edit distance
+            // Calculate edit distance for logging
             let distance = calculateEditDistance(originalText, editedText)
             let similarity = 1.0 - (Double(distance) / Double(max(originalText.count, editedText.count)))
 
-            // Only learn from significant edits (>10% change)
-            if similarity < 0.9 {
+            // Learn from ANY change - user intent is the signal!
+            if editedText != originalText {
                 do {
                     let method = clipboardMonitor.currentDetectionMethod
                     let methodStr = method == .accessibility ? "Accessibility" : "Clipboard"
@@ -75,6 +75,7 @@ final class LearningService: LearningServiceProtocol {
                     Logger.shared.info("Detection: \(methodStr)")
                     Logger.shared.info("Document Type: \(documentType.rawValue)")
                     Logger.shared.info("Similarity: \(String(format: "%.1f", similarity * 100))%")
+                    Logger.shared.info("Change: \(distance) character edits")
                     Logger.shared.info("Original (\(originalText.count) chars): \"\(originalText.prefix(50))...\"")
                     Logger.shared.info("Edited (\(editedText.count) chars): \"\(editedText.prefix(50))...\"")
                     Logger.shared.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -82,7 +83,7 @@ final class LearningService: LearningServiceProtocol {
                     Logger.shared.error("Failed to store learning pattern", error: error)
                 }
             } else {
-                Logger.shared.debug("Edit too small to learn from (\(String(format: "%.1f", similarity * 100))% similar)")
+                Logger.shared.debug("No changes detected - text identical")
             }
         } else {
             Logger.shared.debug("No edits detected within timeout period")

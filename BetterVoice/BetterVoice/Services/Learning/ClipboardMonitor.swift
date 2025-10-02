@@ -156,8 +156,8 @@ final class ClipboardMonitor {
 
         let similarity = 1.0 - (Double(distance) / Double(maxLength))
 
-        // Significant change if <90% similar (>10% different)
-        if similarity < 0.9 {
+        // Detect ANY change - user intent is the signal!
+        if clipboardString != original {
             editedText = clipboardString
             detectionMethod = .clipboard
             Logger.shared.info("✓ Detected edit via CLIPBOARD: \(Int(similarity * 100))% similar")
@@ -185,8 +185,8 @@ final class ClipboardMonitor {
 
         let similarity = 1.0 - (Double(distance) / Double(maxLength))
 
-        // Significant change if <90% similar (>10% different)
-        if similarity < 0.9 {
+        // Detect ANY change - user intent is the signal!
+        if focusedText != original {
             editedText = focusedText
             detectionMethod = .accessibility
             let appName = accessibilityReader.getFocusedApplicationName() ?? "unknown"

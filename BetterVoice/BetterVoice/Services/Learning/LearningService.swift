@@ -60,16 +60,32 @@ final class LearningService: LearningServiceProtocol {
             // Only learn from significant edits (>10% change)
             if similarity < 0.9 {
                 do {
+                    let method = clipboardMonitor.currentDetectionMethod
+                    let methodStr = method == .accessibility ? "Accessibility" : "Clipboard"
+
                     try storePattern(
                         original: originalText,
                         edited: editedText,
                         documentType: documentType
                     )
-                    Logger.shared.info("Stored learning pattern: \(similarity * 100)% similarity")
+
+                    // Detailed logging
+                    Logger.shared.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    Logger.shared.info("✓ LEARNING PATTERN SAVED")
+                    Logger.shared.info("Detection: \(methodStr)")
+                    Logger.shared.info("Document Type: \(documentType.rawValue)")
+                    Logger.shared.info("Similarity: \(String(format: "%.1f", similarity * 100))%")
+                    Logger.shared.info("Original (\(originalText.count) chars): \"\(originalText.prefix(50))...\"")
+                    Logger.shared.info("Edited (\(editedText.count) chars): \"\(editedText.prefix(50))...\"")
+                    Logger.shared.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 } catch {
                     Logger.shared.error("Failed to store learning pattern", error: error)
                 }
+            } else {
+                Logger.shared.debug("Edit too small to learn from (\(String(format: "%.1f", similarity * 100))% similar)")
             }
+        } else {
+            Logger.shared.debug("No edits detected within timeout period")
         }
 
         await clipboardMonitor.stopMonitoring()

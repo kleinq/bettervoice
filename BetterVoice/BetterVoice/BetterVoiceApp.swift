@@ -122,8 +122,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Logger.shared.info("Accessibility permission not granted - app detection and pasting will be limited")
         }
 
-        // TODO: Load default Whisper model (requires database schema setup)
-        // For now, just log that app is ready
+        // Initialize database for learning patterns
+        do {
+            try DatabaseManager.shared.setup()
+            Logger.shared.info("✓ Database initialized successfully")
+        } catch {
+            Logger.shared.error("Failed to initialize database", error: error)
+        }
+
+        // Load default Whisper model on first use
         Logger.shared.info("App ready, default model will be loaded on first use")
 
         let elapsed = Date().timeIntervalSince(startTime)

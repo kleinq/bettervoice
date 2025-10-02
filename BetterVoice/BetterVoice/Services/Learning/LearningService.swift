@@ -118,29 +118,85 @@ final class LearningService: LearningServiceProtocol {
         return matchedPatterns.map { $0.pattern }
     }
 
-    /// Apply learned patterns to improve text
+    /// Apply learned patterns to improve text using token-level replacements
     func applyLearned(
         text: String,
         documentType: DocumentType
     ) throws -> String {
         var improved = text
 
-        // Find similar patterns
-        let patterns = try findSimilarPatterns(text: text, documentType: documentType)
+        // Get all high-confidence patterns for this document type
+        let patterns = try databaseManager.fetchLearningPatterns(for: documentType, minimumConfidence: 0.7)
 
-        // Apply the most confident pattern
-        if let bestPattern = patterns.first, bestPattern.confidence > 0.8 {
-            // Simple replacement for now
-            // In production, this would use more sophisticated pattern matching
-            improved = bestPattern.editedText
+        // Extract token-level replacements from patterns
+        var replacements: [(from: String, to: String)] = []
 
-            // Increment pattern frequency
-            try databaseManager.incrementPatternFrequency(bestPattern.id!)
+        for pattern in patterns {
+            // Find word-level differences between original and edited
+            let tokenReplacements = extractTokenReplacements(
+                original: pattern.originalText,
+                edited: pattern.editedText
+            )
+            replacements.append(contentsOf: tokenReplacements)
+        }
 
-            Logger.shared.info("Applied learned pattern with confidence \(bestPattern.confidence)")
+        // Apply replacements (case-insensitive, whole word matching)
+        for replacement in replacements {
+            improved = applyTokenReplacement(
+                text: improved,
+                from: replacement.from,
+                to: replacement.to
+            )
+        }
+
+        if improved != text {
+            Logger.shared.info("Applied \(replacements.count) learned pattern(s)")
         }
 
         return improved
+    }
+
+    /// Extract word-level differences between original and edited text
+    private func extractTokenReplacements(original: String, edited: String) -> [(from: String, to: String)] {
+        let originalWords = original.components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+        let editedWords = edited.components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+
+        var replacements: [(from: String, to: String)] = []
+
+        // Simple alignment: find words that changed
+        let minLength = min(originalWords.count, editedWords.count)
+        for i in 0..<minLength {
+            let origWord = originalWords[i].trimmingCharacters(in: .punctuationCharacters)
+            let editWord = editedWords[i].trimmingCharacters(in: .punctuationCharacters)
+
+            // If words differ and aren't too short (avoid common words)
+            if origWord.lowercased() != editWord.lowercased() && origWord.count >= 3 {
+                replacements.append((from: origWord, to: editWord))
+            }
+        }
+
+        return replacements
+    }
+
+    /// Apply case-insensitive whole-word replacement
+    private func applyTokenReplacement(text: String, from: String, to: String) -> String {
+        // Use word boundaries to avoid partial matches
+        let pattern = "\\b\(NSRegularExpression.escapedPattern(for: from))\\b"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return text
+        }
+
+        let range = NSRange(text.startIndex..., in: text)
+        let result = regex.stringByReplacingMatches(
+            in: text,
+            range: range,
+            withTemplate: to
+        )
+
+        return result
     }
 
     // MARK: - Private Methods

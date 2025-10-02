@@ -27,6 +27,7 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
 
     private let fillerRemover = FillerWordRemover.shared
     private let formatApplier = FormatApplier.shared
+    private let learningService = LearningService.shared
 
     // MARK: - Public Methods
 
@@ -60,10 +61,18 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         appliedRules.append("format_\(documentType.rawValue)")
 
         // Stage 5: Apply Learning (if enabled)
+        var patternsApplied = 0
         if applyLearning {
-            // TODO: Implement learning pattern application
-            // enhanced = try await applyLearningPatterns(enhanced, documentType: documentType)
-            appliedRules.append("apply_learning")
+            do {
+                let beforeLearning = enhanced
+                enhanced = try learningService.applyLearned(text: enhanced, documentType: documentType)
+                if enhanced != beforeLearning {
+                    appliedRules.append("apply_learning")
+                    patternsApplied = 1 // Simplified count
+                }
+            } catch {
+                Logger.shared.error("Failed to apply learning patterns", error: error)
+            }
         }
 
         // Stage 6: Cloud Enhancement (if enabled)
@@ -79,7 +88,7 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
             enhancedText: enhanced,
             documentType: documentType,
             appliedRules: appliedRules,
-            learnedPatternsApplied: 0,
+            learnedPatternsApplied: patternsApplied,
             cloudEnhanced: useCloud,
             cloudProvider: useCloud ? "claude" : nil,
             timestamp: Date()

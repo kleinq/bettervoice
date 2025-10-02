@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.bettervoice.BetterVoice</string>
+	<key>CFBundleName</key>
+	<string>BetterVoice</string>
+	<key>CFBundleDisplayName</key>
+	<string>BetterVoice</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>BetterVoice needs microphone access to transcribe your voice input.</string>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>BetterVoice needs accessibility access to detect the active application and simulate text pasting.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>BetterVoice needs screen recording permission to detect the active application window for context-aware text formatting.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.bettervoice.BetterVoice</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bettervoice</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

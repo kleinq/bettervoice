@@ -1,0 +1,90 @@
+# SwiftLint Configuration for BetterVoice
+# Constitutional compliance: Code quality and maintainability
+
+disabled_rules:
+  - trailing_whitespace
+  - todo # Allow TODOs during development
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - fatal_error_message
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - overridden_super_call
+  - redundant_nil_coalescing
+  - sorted_imports
+
+included:
+  - BetterVoice/
+  - BetterVoiceTests/
+  - BetterVoiceUITests/
+
+excluded:
+  - Carthage
+  - Pods
+  - whisper.cpp
+  - .build
+
+# Rule Configurations
+line_length:
+  warning: 120
+  error: 200
+  ignores_function_declarations: true
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 300
+  error: 500
+
+file_length:
+  warning: 500
+  error: 1000
+  ignore_comment_only_lines: true
+
+function_body_length:
+  warning: 60
+  error: 100
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+nesting:
+  type_level: 2
+  function_level: 3
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - db
+    - i
+    - x
+    - y
+
+type_name:
+  min_length: 3
+  max_length: 50
+
+# Custom Rules
+custom_rules:
+  no_print:
+    name: "No Print Statements"
+    regex: '(?<!//)\bprint\('
+    message: "Use Logger instead of print()"
+    severity: warning
+
+  copyright_header:
+    name: "Copyright Header"
+    regex: '^(?!//).*\n.*\n.*BetterVoice'
+    message: "Files should have copyright headers"
+    severity: warning
+
+reporter: "xcode"

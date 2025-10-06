@@ -248,7 +248,7 @@ final class WhisperService: WhisperServiceProtocol {
         let result = String(cString: resultCString)
         free(resultCString) // Free the C string allocated by the bridge
 
-        let trimmed = result.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = result.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         Logger.shared.info("Whisper raw result: '\(result)' (trimmed: '\(trimmed)', length: \(trimmed.count))")
 
         return trimmed

@@ -63,6 +63,30 @@ final class AccessibilityTextReader {
         return workspace.frontmostApplication?.localizedName
     }
 
+    /// Get PID of currently focused element
+    func getFocusedElementPID() -> pid_t? {
+        guard AXIsProcessTrusted() else {
+            return nil
+        }
+
+        let systemWide = AXUIElementCreateSystemWide()
+        var focusedElement: CFTypeRef?
+        let focusResult = AXUIElementCopyAttributeValue(
+            systemWide,
+            kAXFocusedUIElementAttribute as CFString,
+            &focusedElement
+        )
+
+        guard focusResult == .success, let element = focusedElement else {
+            return nil
+        }
+
+        var pid: pid_t = 0
+        let pidResult = AXUIElementGetPid(element as! AXUIElement, &pid)
+
+        return pidResult == .success ? pid : nil
+    }
+
     // MARK: - Private Methods
 
     private func getTextValue(from element: AXUIElement) -> String? {

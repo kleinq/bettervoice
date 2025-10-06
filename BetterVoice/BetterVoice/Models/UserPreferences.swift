@@ -32,6 +32,11 @@ struct UserPreferences: Codable, @unchecked Sendable {
     var externalLLMEnabled: Bool
     var externalLLMProvider: String?
     var externalLLMAPIKey: String?
+    var llmEnhanceEmail: Bool
+    var llmEnhanceMessage: Bool
+    var llmEnhanceDocument: Bool
+    var llmEnhanceSocial: Bool
+    var llmEnhanceCode: Bool
     var logLevel: LogLevel
     var autoDeleteTranscriptions: Bool
     var autoDeleteAfterDays: Int
@@ -41,6 +46,7 @@ struct UserPreferences: Codable, @unchecked Sendable {
     var autoCapitalize: Bool
     var autoPunctuate: Bool
     var applyLearningPatterns: Bool
+    var customVocabulary: [String]
 
     // Onboarding
     var hasCompletedOnboarding: Bool
@@ -65,6 +71,11 @@ struct UserPreferences: Codable, @unchecked Sendable {
         externalLLMEnabled: Bool = false,
         externalLLMProvider: String? = nil,
         externalLLMAPIKey: String? = nil,
+        llmEnhanceEmail: Bool = false,
+        llmEnhanceMessage: Bool = false,
+        llmEnhanceDocument: Bool = false,
+        llmEnhanceSocial: Bool = false,
+        llmEnhanceCode: Bool = false,
         logLevel: LogLevel = .info,
         autoDeleteTranscriptions: Bool = false,
         autoDeleteAfterDays: Int = 30,
@@ -72,6 +83,7 @@ struct UserPreferences: Codable, @unchecked Sendable {
         autoCapitalize: Bool = true,
         autoPunctuate: Bool = true,
         applyLearningPatterns: Bool = true,
+        customVocabulary: [String] = [],
         hasCompletedOnboarding: Bool = false
     ) {
         self.hotkeyKeyCode = hotkeyKeyCode
@@ -88,6 +100,12 @@ struct UserPreferences: Codable, @unchecked Sendable {
         self.learningSystemEnabled = learningSystemEnabled
         self.externalLLMEnabled = externalLLMEnabled
         self.externalLLMProvider = externalLLMProvider
+        self.externalLLMAPIKey = externalLLMAPIKey
+        self.llmEnhanceEmail = llmEnhanceEmail
+        self.llmEnhanceMessage = llmEnhanceMessage
+        self.llmEnhanceDocument = llmEnhanceDocument
+        self.llmEnhanceSocial = llmEnhanceSocial
+        self.llmEnhanceCode = llmEnhanceCode
         self.logLevel = logLevel
         self.autoDeleteTranscriptions = autoDeleteTranscriptions
         self.autoDeleteAfterDays = autoDeleteAfterDays
@@ -95,6 +113,7 @@ struct UserPreferences: Codable, @unchecked Sendable {
         self.autoCapitalize = autoCapitalize
         self.autoPunctuate = autoPunctuate
         self.applyLearningPatterns = applyLearningPatterns
+        self.customVocabulary = customVocabulary
         self.hasCompletedOnboarding = hasCompletedOnboarding
     }
 

@@ -1,0 +1,121 @@
+text,label
+"Dear hiring manager, I am writing to express my interest in the software engineering position at your company.",email
+"Dear Sir or Madam, I would like to inquire about the status of my application submitted last week.",email
+"Dear colleagues, Please find attached the quarterly report for your review.",email
+"Dear team, I wanted to follow up on our discussion from yesterday's meeting regarding the project timeline.",email
+"Dear Dr. Smith, Thank you for taking the time to speak with me about the research opportunity.",email
+"Dear Customer Service, I am writing to request a refund for order number 12345.",email
+"Dear valued customer, We are pleased to inform you about our new product launch.",email
+"Dear Board Members, I am writing to provide an update on the company's financial performance.",email
+"Dear Professor Johnson, I hope this email finds you well. I wanted to discuss my thesis proposal.",email
+"Dear Support Team, I am experiencing technical difficulties with your software application.",email
+"Good morning, I am reaching out regarding the upcoming conference scheduled for next month.",email
+"Hello, I would like to schedule a meeting to discuss the partnership opportunity.",email
+"Greetings, I am writing on behalf of our organization to request your participation.",email
+"Dear friends and family, We are excited to announce our upcoming wedding celebration.",email
+"Dear Editor, I am submitting my manuscript for consideration in your journal.",email
+"To whom it may concern, I am writing to provide a reference for my former colleague.",email
+"Dear recruiter, I came across your job posting and believe I would be a great fit.",email
+"Dear Alumni, We cordially invite you to our annual reunion event.",email
+"Dear subscribers, We wanted to update you on some changes to our service.",email
+"Dear participants, Thank you for registering for our workshop next week.",email
+"Hey Sarah, are we still on for lunch today?",message
+"Hi! Just wanted to check in and see how you're doing",message
+"Yo, did you see that game last night?",message
+"Hey team, quick question about the project",message
+"What's up? Want to grab coffee later?",message
+"Thanks for the help earlier!",message
+"Sure thing, I'll take care of that",message
+"On my way, be there in 5 minutes",message
+"Can you send me that file when you get a chance",message
+"Sounds good to me!",message
+"LOL that's hilarious",message
+"Congrats on the new job!",message
+"Miss you! Let's catch up soon",message
+"Running a bit late, sorry",message
+"Perfect timing, I was just about to ask you the same thing",message
+"No worries, happens to everyone",message
+"Awesome, thanks for letting me know",message
+"Hey, have you heard back from them yet?",message
+"That works for me, see you then",message
+"Great idea! Let's do it",message
+"The quarterly financial report demonstrates significant growth across all market segments. Revenue increased by 23% compared to the previous quarter.",document
+"Executive Summary: This document outlines the strategic initiatives for the upcoming fiscal year. Key priorities include market expansion and operational efficiency.",document
+"The research methodology employed in this study utilized a mixed-methods approach combining quantitative surveys with qualitative interviews.",document
+"The board of directors convened on October 15th to discuss the proposed merger and acquisition strategy.",document
+"Analysis of the data reveals a strong correlation between customer satisfaction scores and retention rates.",document
+"The implementation plan consists of three distinct phases executed over a twelve-month period.",document
+"Findings from the market research indicate a growing demand for sustainable products among millennial consumers.",document
+"The proposed budget allocation prioritizes investments in research and development while maintaining operational expenditures.",document
+"The committee recommends adoption of the new policy framework effective January 1st of next year.",document
+"Preliminary results suggest that the intervention significantly improved patient outcomes across multiple metrics.",document
+"The comprehensive review examined all aspects of the current organizational structure and identified areas for improvement.",document
+"Statistical analysis demonstrates a statistically significant difference between the control and experimental groups.",document
+"The white paper presents a detailed examination of industry trends and their implications for future growth.",document
+"Performance metrics indicate that the initiative exceeded its stated objectives in all key performance indicators.",document
+"The strategic plan encompasses both short-term tactical goals and long-term visionary objectives.",document
+"Regulatory compliance requirements mandate adherence to established protocols and documentation standards.",document
+"The assessment framework evaluates competency across technical skills, leadership capabilities, and strategic thinking.",document
+"The annual report provides stakeholders with transparent disclosure of financial performance and operational achievements.",document
+"The literature review synthesizes existing research and identifies gaps in current understanding.",document
+"Policy recommendations are grounded in evidence-based analysis of program effectiveness and cost-benefit considerations.",document
+"Just shipped our new feature! Love seeing users respond",social
+"Can't believe it's already Friday! Weekend vibes starting early",social
+"Excited to announce I'm joining the team at TechCorp!",social
+"Beautiful sunset tonight, had to share",social
+"New blog post is live! Check it out and let me know what you think",social
+"Grateful for this amazing community",social
+"Quick poll: coffee or tea?",social
+"Absolutely loving this new album on repeat",social
+"Travel tip: always pack an extra charger",social
+"Celebrating 1 year at the company today!",social
+"Big news coming soon, stay tuned",social
+"Throwback to last summer's adventure",social
+"Monday motivation: you got this",social
+"Currently reading this fantastic book, highly recommend",social
+"Life update: moved to a new city and loving it so far",social
+"Random thought: why do we park in driveways and drive on parkways",social
+"Workout complete, feeling accomplished",social
+"Anyone else completely obsessed with this show",social
+"Just launched my side project, feedback welcome",social
+"Thankful for amazing friends and family",social
+"function calculateTotal(items) { return items.reduce((sum, item) => sum + item.price, 0); }",code
+"const API_URL = 'https://api.example.com'; fetch(API_URL).then(response => response.json());",code
+"class UserManager { constructor() { this.users = []; } addUser(user) { this.users.push(user); } }",code
+"if (user.isAuthenticated) { return <Dashboard />; } else { return <Login />; }",code
+"import React from 'react'; import { useState } from 'react'; const [count, setCount] = useState(0);",code
+"def process_data(data): return [item for item in data if item.is_valid()]",code
+"async function fetchUserData(userId) { const response = await api.get(`/users/${userId}`); return response.data; }",code
+"var result = array.filter(x => x > 10).map(x => x * 2).reduce((a, b) => a + b);",code
+"struct Point { let x: Double; let y: Double; func distance(to other: Point) -> Double { return sqrt(pow(x - other.x, 2) + pow(y - other.y, 2)); } }",code
+"SELECT users.name, orders.total FROM users JOIN orders ON users.id = orders.user_id WHERE orders.status = 'completed';",code
+"try { await database.query(sql); } catch (error) { logger.error('Database error:', error); throw error; }",code
+"export default function Component() { useEffect(() => { console.log('mounted'); return () => console.log('unmounted'); }, []); }",code
+"public class Calculator { public int add(int a, int b) { return a + b; } }",code
+"let numbers = [1, 2, 3, 4, 5]; let doubled = numbers.map { $0 * 2 };",code
+"const handleClick = (event) => { event.preventDefault(); setIsOpen(!isOpen); };",code
+"from typing import List, Optional; def find_user(user_id: int) -> Optional[User]: return db.query(User).filter(User.id == user_id).first()",code
+"interface User { id: number; name: string; email: string; }",code
+"for i in range(len(array)): if array[i] == target: return i; return -1;",code
+"enum Status { case pending; case active; case completed; case failed; }",code
+"const query = `INSERT INTO users (name, email) VALUES (?, ?)`, [name, email];",code
+"weather in San Francisco",search
+"how to learn Swift programming",search
+"best restaurants near me",search
+"python list comprehension tutorial",search
+"stock price AAPL",search
+"convert 100 USD to EUR",search
+"what time is it in Tokyo",search
+"define cryptocurrency",search
+"movie showtimes tonight",search
+"directions to nearest coffee shop",search
+"latest news technology",search
+"who won the game yesterday",search
+"calculate mortgage payment",search
+"translate hello to Spanish",search
+"find hotels in Paris",search
+"recipe for chocolate cake",search
+"flight status AA 123",search
+"what is machine learning",search
+"upcoming concerts in New York",search
+"population of Canada",search

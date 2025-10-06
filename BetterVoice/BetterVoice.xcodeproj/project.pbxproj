@@ -1,0 +1,765 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D1A680FF2E8C706900E1151A /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = D1A680FE2E8C706900E1151A /* GRDB */; };
+		D1A6811D2E8C73D500E1151A /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1A6811C2E8C73D500E1151A /* Accelerate.framework */; };
+		D1A682052E8C8D2A00E1151A /* libggml.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D1A682032E8C8D2A00E1151A /* libggml.dylib */; };
+		D1A682062E8C8D2A00E1151A /* libggml.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = D1A682032E8C8D2A00E1151A /* libggml.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		D1A682072E8C8D2A00E1151A /* libwhisper.1.8.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D1A682042E8C8D2A00E1151A /* libwhisper.1.8.0.dylib */; };
+		D1A682082E8C8D2A00E1151A /* libwhisper.1.8.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = D1A682042E8C8D2A00E1151A /* libwhisper.1.8.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D1A680C02E8C6D3500E1151A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1A680AA2E8C6D3200E1151A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1A680B12E8C6D3300E1151A;
+			remoteInfo = BetterVoice;
+		};
+		D1A680CA2E8C6D3500E1151A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1A680AA2E8C6D3200E1151A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1A680B12E8C6D3300E1151A;
+			remoteInfo = BetterVoice;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D1A682092E8C8D2A00E1151A /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D1A682082E8C8D2A00E1151A /* libwhisper.1.8.0.dylib in Embed Libraries */,
+				D1A682062E8C8D2A00E1151A /* libggml.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D1A680B22E8C6D3300E1151A /* BetterVoice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BetterVoice.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1A680BF2E8C6D3500E1151A /* BetterVoiceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterVoiceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1A680C92E8C6D3500E1151A /* BetterVoiceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterVoiceUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1A6810F2E8C730600E1151A /* whisper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = whisper.cpp; path = whisper.cpp/src/whisper.cpp; sourceTree = "<group>"; };
+		D1A681102E8C730600E1151A /* ggml-backend.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "ggml-backend.cpp"; path = "whisper.cpp/ggml/src/ggml-backend.cpp"; sourceTree = "<group>"; };
+		D1A681112E8C730600E1151A /* ggml-quants.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "ggml-quants.c"; path = "whisper.cpp/ggml/src/ggml-quants.c"; sourceTree = "<group>"; };
+		D1A681122E8C730600E1151A /* ggml.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ggml.c; path = whisper.cpp/ggml/src/ggml.c; sourceTree = "<group>"; };
+		D1A681132E8C730600E1151A /* ggml-alloc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "ggml-alloc.c"; path = "whisper.cpp/ggml/src/ggml-alloc.c"; sourceTree = "<group>"; };
+		D1A681142E8C730600E1151A /* ggml-impl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ggml-impl.h"; path = "whisper.cpp/ggml/src/ggml-impl.h"; sourceTree = "<group>"; };
+		D1A6811C2E8C73D500E1151A /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		D1A681B02E8C8A2700E1151A /* WhisperBridge.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = WhisperBridge.cpp; path = BetterVoice/WhisperBridge.cpp; sourceTree = "<group>"; };
+		D1A682032E8C8D2A00E1151A /* libggml.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libggml.dylib; path = whisper.cpp/build/ggml/src/libggml.dylib; sourceTree = "<group>"; };
+		D1A682042E8C8D2A00E1151A /* libwhisper.1.8.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libwhisper.1.8.0.dylib; path = whisper.cpp/build/src/libwhisper.1.8.0.dylib; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D1A6811F2E8C74F600E1151A /* Exceptions for "BetterVoice" folder in "BetterVoice" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D1A680B12E8C6D3300E1151A /* BetterVoice */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		D1A681222E8C761B00E1151A /* Exceptions for "BetterVoice" folder in "Copy Bundle Resources" phase from "BetterVoice" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D1A680B02E8C6D3300E1151A /* Resources */;
+			membershipExceptions = (
+				BetterVoice.entitlements,
+			);
+		};
+		D1A681AF2E8C89F300E1151A /* Exceptions for "BetterVoice" folder in "Compile Sources" phase from "BetterVoice" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D1A680AE2E8C6D3300E1151A /* Sources */;
+			membershipExceptions = (
+				WhisperBridge.h,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D1A680B42E8C6D3300E1151A /* BetterVoice */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D1A6811F2E8C74F600E1151A /* Exceptions for "BetterVoice" folder in "BetterVoice" target */,
+				D1A681AF2E8C89F300E1151A /* Exceptions for "BetterVoice" folder in "Compile Sources" phase from "BetterVoice" target */,
+				D1A681222E8C761B00E1151A /* Exceptions for "BetterVoice" folder in "Copy Bundle Resources" phase from "BetterVoice" target */,
+			);
+			path = BetterVoice;
+			sourceTree = "<group>";
+		};
+		D1A680C22E8C6D3500E1151A /* BetterVoiceTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BetterVoiceTests;
+			sourceTree = "<group>";
+		};
+		D1A680CC2E8C6D3500E1151A /* BetterVoiceUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BetterVoiceUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D1A680AF2E8C6D3300E1151A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1A682072E8C8D2A00E1151A /* libwhisper.1.8.0.dylib in Frameworks */,
+				D1A680FF2E8C706900E1151A /* GRDB in Frameworks */,
+				D1A6811D2E8C73D500E1151A /* Accelerate.framework in Frameworks */,
+				D1A682052E8C8D2A00E1151A /* libggml.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A680BC2E8C6D3500E1151A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A680C62E8C6D3500E1151A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D1A680A92E8C6D3200E1151A = {
+			isa = PBXGroup;
+			children = (
+				D1A681B02E8C8A2700E1151A /* WhisperBridge.cpp */,
+				D1A681122E8C730600E1151A /* ggml.c */,
+				D1A681132E8C730600E1151A /* ggml-alloc.c */,
+				D1A681102E8C730600E1151A /* ggml-backend.cpp */,
+				D1A681142E8C730600E1151A /* ggml-impl.h */,
+				D1A681112E8C730600E1151A /* ggml-quants.c */,
+				D1A6810F2E8C730600E1151A /* whisper.cpp */,
+				D1A680B42E8C6D3300E1151A /* BetterVoice */,
+				D1A680C22E8C6D3500E1151A /* BetterVoiceTests */,
+				D1A680CC2E8C6D3500E1151A /* BetterVoiceUITests */,
+				D1A6811B2E8C73D400E1151A /* Frameworks */,
+				D1A680B32E8C6D3300E1151A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D1A680B32E8C6D3300E1151A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D1A680B22E8C6D3300E1151A /* BetterVoice.app */,
+				D1A680BF2E8C6D3500E1151A /* BetterVoiceTests.xctest */,
+				D1A680C92E8C6D3500E1151A /* BetterVoiceUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D1A6811B2E8C73D400E1151A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D1A682032E8C8D2A00E1151A /* libggml.dylib */,
+				D1A682042E8C8D2A00E1151A /* libwhisper.1.8.0.dylib */,
+				D1A6811C2E8C73D500E1151A /* Accelerate.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D1A680B12E8C6D3300E1151A /* BetterVoice */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1A680D32E8C6D3500E1151A /* Build configuration list for PBXNativeTarget "BetterVoice" */;
+			buildPhases = (
+				D1A681232E8C767D00E1151A /* ShellScript */,
+				D1A680AE2E8C6D3300E1151A /* Sources */,
+				D1A680AF2E8C6D3300E1151A /* Frameworks */,
+				D1A680B02E8C6D3300E1151A /* Resources */,
+				D1A682092E8C8D2A00E1151A /* Embed Libraries */,
+				D1A681242E8C767E00E1151B /* Fix Whisper Library Symlinks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D1A680B42E8C6D3300E1151A /* BetterVoice */,
+			);
+			name = BetterVoice;
+			packageProductDependencies = (
+				D1A680FE2E8C706900E1151A /* GRDB */,
+			);
+			productName = BetterVoice;
+			productReference = D1A680B22E8C6D3300E1151A /* BetterVoice.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D1A680BE2E8C6D3500E1151A /* BetterVoiceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1A680D62E8C6D3500E1151A /* Build configuration list for PBXNativeTarget "BetterVoiceTests" */;
+			buildPhases = (
+				D1A680BB2E8C6D3500E1151A /* Sources */,
+				D1A680BC2E8C6D3500E1151A /* Frameworks */,
+				D1A680BD2E8C6D3500E1151A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D1A680C12E8C6D3500E1151A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D1A680C22E8C6D3500E1151A /* BetterVoiceTests */,
+			);
+			name = BetterVoiceTests;
+			packageProductDependencies = (
+			);
+			productName = BetterVoiceTests;
+			productReference = D1A680BF2E8C6D3500E1151A /* BetterVoiceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D1A680C82E8C6D3500E1151A /* BetterVoiceUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1A680D92E8C6D3500E1151A /* Build configuration list for PBXNativeTarget "BetterVoiceUITests" */;
+			buildPhases = (
+				D1A680C52E8C6D3500E1151A /* Sources */,
+				D1A680C62E8C6D3500E1151A /* Frameworks */,
+				D1A680C72E8C6D3500E1151A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D1A680CB2E8C6D3500E1151A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D1A680CC2E8C6D3500E1151A /* BetterVoiceUITests */,
+			);
+			name = BetterVoiceUITests;
+			packageProductDependencies = (
+			);
+			productName = BetterVoiceUITests;
+			productReference = D1A680C92E8C6D3500E1151A /* BetterVoiceUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D1A680AA2E8C6D3200E1151A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					D1A680B12E8C6D3300E1151A = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					D1A680BE2E8C6D3500E1151A = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = D1A680B12E8C6D3300E1151A;
+					};
+					D1A680C82E8C6D3500E1151A = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = D1A680B12E8C6D3300E1151A;
+					};
+				};
+			};
+			buildConfigurationList = D1A680AD2E8C6D3300E1151A /* Build configuration list for PBXProject "BetterVoice" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D1A680A92E8C6D3200E1151A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D1A680FD2E8C706900E1151A /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D1A680B32E8C6D3300E1151A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D1A680B12E8C6D3300E1151A /* BetterVoice */,
+				D1A680BE2E8C6D3500E1151A /* BetterVoiceTests */,
+				D1A680C82E8C6D3500E1151A /* BetterVoiceUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D1A680B02E8C6D3300E1151A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A680BD2E8C6D3500E1151A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A680C72E8C6D3500E1151A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D1A681232E8C767D00E1151A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif which swiftlint >/dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+		};
+		D1A681242E8C767E00E1151B /* Fix Whisper Library Symlinks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Fix Whisper Library Symlinks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "# Post-build: Fix whisper library references\n# This must run AFTER Embed Libraries but BEFORE code signing\n\n/Users/robertwinder/Projects/hack/bettervoice/scripts/post-build-fix.sh\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D1A680AE2E8C6D3300E1151A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A680BB2E8C6D3500E1151A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A680C52E8C6D3500E1151A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D1A680C12E8C6D3500E1151A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1A680B12E8C6D3300E1151A /* BetterVoice */;
+			targetProxy = D1A680C02E8C6D3500E1151A /* PBXContainerItemProxy */;
+		};
+		D1A680CB2E8C6D3500E1151A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1A680B12E8C6D3300E1151A /* BetterVoice */;
+			targetProxy = D1A680CA2E8C6D3500E1151A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D1A680D12E8C6D3500E1151A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OBJC_BRIDGING_HEADER = "BetterVoice/BetterVoice-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D1A680D22E8C6D3500E1151A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "BetterVoice/BetterVoice-Bridging-Header.h";
+			};
+			name = Release;
+		};
+		D1A680D42E8C6D3500E1151A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_ENTITLEMENTS = BetterVoice/BetterVoice.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/whisper.cpp/**";
+				INFOPLIST_FILE = BetterVoice/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSUIElement = NO;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/whisper.cpp/build/ggml/src",
+					"$(PROJECT_DIR)/whisper.cpp/build/src",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bettervoice.BetterVoice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D1A680D52E8C6D3500E1151A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_ENTITLEMENTS = BetterVoice/BetterVoice.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/whisper.cpp/**";
+				INFOPLIST_FILE = BetterVoice/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSUIElement = NO;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/whisper.cpp/build/ggml/src",
+					"$(PROJECT_DIR)/whisper.cpp/build/src",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bettervoice.BetterVoice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D1A680D72E8C6D3500E1151A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bettervoice.BetterVoiceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BetterVoice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BetterVoice";
+			};
+			name = Debug;
+		};
+		D1A680D82E8C6D3500E1151A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bettervoice.BetterVoiceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BetterVoice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BetterVoice";
+			};
+			name = Release;
+		};
+		D1A680DA2E8C6D3500E1151A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bettervoice.BetterVoiceUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = BetterVoice;
+			};
+			name = Debug;
+		};
+		D1A680DB2E8C6D3500E1151A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9ZH8724RLM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bettervoice.BetterVoiceUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = BetterVoice;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D1A680AD2E8C6D3300E1151A /* Build configuration list for PBXProject "BetterVoice" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1A680D12E8C6D3500E1151A /* Debug */,
+				D1A680D22E8C6D3500E1151A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1A680D32E8C6D3500E1151A /* Build configuration list for PBXNativeTarget "BetterVoice" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1A680D42E8C6D3500E1151A /* Debug */,
+				D1A680D52E8C6D3500E1151A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1A680D62E8C6D3500E1151A /* Build configuration list for PBXNativeTarget "BetterVoiceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1A680D72E8C6D3500E1151A /* Debug */,
+				D1A680D82E8C6D3500E1151A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1A680D92E8C6D3500E1151A /* Build configuration list for PBXNativeTarget "BetterVoiceUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1A680DA2E8C6D3500E1151A /* Debug */,
+				D1A680DB2E8C6D3500E1151A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D1A680FD2E8C706900E1151A /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D1A680FE2E8C706900E1151A /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A680FD2E8C706900E1151A /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D1A680AA2E8C6D3200E1151A /* Project object */;
+}

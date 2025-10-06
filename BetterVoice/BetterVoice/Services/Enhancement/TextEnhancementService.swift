@@ -58,19 +58,26 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         var detectedType = documentType
 
         // Stage 0: Auto-classify if service available and documentType is .unknown
-        if documentType == .unknown, let classifier = classificationService {
-            do {
-                let classification = try await classifier.classify(text)
-                detectedType = classification.category
-                appliedRules.append("auto_classify_\(detectedType.rawValue)")
-            } catch {
-                Logger.shared.error("Auto-classification failed", error: error)
-                // Continue with .unknown
+        if documentType == .unknown {
+            if let classifier = classificationService {
+                do {
+                    Logger.shared.info("🤖 Running ML classification...")
+                    let classification = try await classifier.classify(text)
+                    detectedType = classification.category
+                    Logger.shared.info("✅ ML Result: \(detectedType.rawValue)")
+                    appliedRules.append("auto_classify_\(detectedType.rawValue)")
+                } catch {
+                    Logger.shared.error("❌ Auto-classification failed", error: error)
+                    // Continue with .unknown
+                }
+            } else {
+                Logger.shared.warning("⚠️ No classifier available - using .unknown")
             }
         }
 
         // Stage 1: Normalize
         enhanced = normalize(enhanced)
+        Logger.shared.debug("📝 After normalize: '\(enhanced)'")
         appliedRules.append("normalize")
 
         // Stage 2: Remove Fillers
@@ -78,6 +85,7 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         if prefs.removeFillerWords {
             let fillerResult = fillerRemover.remove(from: enhanced)
             enhanced = fillerResult.cleanedText
+            Logger.shared.debug("🧹 After filler removal: '\(enhanced)'")
             _ = fillerResult.removedFillers  // Track but don't store in final model
             appliedRules.append("remove_fillers")
         }
@@ -89,12 +97,14 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
                 autoPunctuate: prefs.autoPunctuate,
                 autoCapitalize: prefs.autoCapitalize
             )
+            Logger.shared.debug("✏️ After punctuate/capitalize: '\(enhanced)'")
             appliedRules.append("punctuate_capitalize")
         }
 
         // Stage 4: Format by document type (use detected type)
         let formatResult = formatApplier.apply(to: enhanced, documentType: detectedType)
         enhanced = formatResult.formattedText
+        Logger.shared.debug("📐 After format (\(detectedType.rawValue)): '\(enhanced)'")
         _ = formatResult.changes  // Track but don't store in final model
         appliedRules.append("format_\(detectedType.rawValue)")
 
@@ -146,6 +156,19 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
 
         // Normalize unicode (NFC form)
         normalized = normalized.precomposedStringWithCanonicalMapping
+
+        // Ensure space after sentence-ending punctuation (. ! ?)
+        // Pattern: period/exclamation/question followed by letter without space
+        let sentenceEndPattern = "([.!?])([A-Z])"
+        if let regex = try? NSRegularExpression(pattern: sentenceEndPattern, options: []) {
+            let range = NSRange(normalized.startIndex..., in: normalized)
+            normalized = regex.stringByReplacingMatches(
+                in: normalized,
+                options: [],
+                range: range,
+                withTemplate: "$1 $2"
+            )
+        }
 
         // Replace multiple spaces with single space
         while normalized.contains("  ") {

@@ -20,7 +20,7 @@ final class DominantCharacteristicAnalyzer {
     ///   - mlPrediction: ML model's predicted category
     /// - Returns: Final category based on dominant characteristics
     func analyze(text: String, features: TextFeatures, mlPrediction: DocumentType) -> DocumentType {
-        // Count votes for each category based on features
+        // Give ML prediction strong initial weight (10 points)
         var scores: [DocumentType: Int] = [
             .email: 0,
             .message: 0,
@@ -29,6 +29,20 @@ final class DominantCharacteristicAnalyzer {
             .code: 0,
             .search: 0
         ]
+
+        // Start with ML prediction having strong weight
+        scores[mlPrediction, default: 0] += 10
+
+        // Strong email phrase indicators (override ML)
+        let lowercased = text.lowercased()
+        if lowercased.contains("your email") || lowercased.contains("thank you for your email") ||
+           lowercased.contains("thanks for your email") {
+            scores[.email, default: 0] += 15  // Very strong indicator
+        }
+        if lowercased.contains("regards,") || lowercased.contains("best regards") ||
+           lowercased.contains("sincerely,") || lowercased.contains("kind regards") {
+            scores[.email, default: 0] += 10  // Strong signature indicator
+        }
 
         // Email indicators
         if features.hasGreeting && features.formalityScore > 0.6 {

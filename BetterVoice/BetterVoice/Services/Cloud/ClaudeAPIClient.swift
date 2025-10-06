@@ -92,18 +92,32 @@ final class ClaudeAPIClient: LLMProvider {
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
 
-        // Build system prompt
+        // Build prompt with {{TEXT}} placeholder replacement
         let finalSystemPrompt = systemPrompt ?? getDefaultSystemPrompt(for: documentType)
+        let userPrompt = finalSystemPrompt.replacingOccurrences(of: "{{TEXT}}", with: text)
 
-        // Build request body
+        // Build request body with new content format
         let requestBody: [String: Any] = [
             "model": model,
-            "max_tokens": 1024,
-            "system": finalSystemPrompt,
+            "max_tokens": 2048,
             "messages": [
                 [
                     "role": "user",
-                    "content": "Please enhance the following transcribed text:\n\n\(text)"
+                    "content": [
+                        [
+                            "type": "text",
+                            "text": userPrompt
+                        ]
+                    ]
+                ],
+                [
+                    "role": "assistant",
+                    "content": [
+                        [
+                            "type": "text",
+                            "text": "<final></final>"
+                        ]
+                    ]
                 ]
             ]
         ]
@@ -122,7 +136,22 @@ final class ClaudeAPIClient: LLMProvider {
             throw LLMError.parseError("Failed to parse Claude API response")
         }
 
-        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // The response will continue from {"final": " so we need to prepend it and close the JSON
+        let completeJson = "{\"final\": \"\(trimmed)\"}"
+
+        // Parse the completed JSON
+        if let jsonData = completeJson.data(using: .utf8),
+           let responseJson = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+           let finalText = responseJson["final"] as? String {
+            Logger.shared.debug("Extracted 'final' from JSON response")
+            return finalText.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // Fallback: return raw text if JSON parsing fails
+        Logger.shared.debug("JSON parsing failed, returning raw text")
+        return trimmed
     }
 
     private func getDefaultSystemPrompt(for documentType: DocumentType) -> String {

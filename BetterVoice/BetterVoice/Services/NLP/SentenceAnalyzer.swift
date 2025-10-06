@@ -113,24 +113,26 @@ actor SentenceAnalyzer {
 
             if sentenceEndings.contains(char.unicodeScalars.first!) {
                 // Capitalize first letter of sentence
-                result += capitalizeSentence(currentSentence)
+                result += capitalizeSentence(currentSentence, isFirst: result.isEmpty)
                 currentSentence = ""
             }
         }
 
         // Add remaining text
         if !currentSentence.isEmpty {
-            result += capitalizeSentence(currentSentence)
+            result += capitalizeSentence(currentSentence, isFirst: result.isEmpty)
         }
 
         return result
     }
 
-    private func capitalizeSentence(_ sentence: String) -> String {
+    private func capitalizeSentence(_ sentence: String, isFirst: Bool) -> String {
+        // For non-first sentences, preserve leading space
+        let leadingSpace = !isFirst && sentence.hasPrefix(" ") ? " " : ""
         let trimmed = sentence.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return sentence }
 
-        // Find first letter
+        // Find first letter and capitalize it
         var chars = Array(trimmed)
         for i in 0..<chars.count {
             if chars[i].isLetter {
@@ -139,7 +141,7 @@ actor SentenceAnalyzer {
             }
         }
 
-        return String(chars)
+        return leadingSpace + String(chars)
     }
 
     /// Full text enhancement: capitalize + punctuate

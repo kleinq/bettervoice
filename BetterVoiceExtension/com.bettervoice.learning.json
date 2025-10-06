@@ -1,0 +1,9 @@
+{
+  "name": "com.bettervoice.learning",
+  "description": "BetterVoice Learning Assistant Native Host",
+  "path": "/Users/robertwinder/Library/Developer/Xcode/DerivedData/BetterVoice-exfoadfrwnjtreabbnzxrlqupgxl/Build/Products/Debug/BetterVoice.app/Contents/MacOS/BetterVoice",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://inacccgdmgdmfpolhbgfbnjjkhohcgkp/"
+  ]
+}

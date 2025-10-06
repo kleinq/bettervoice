@@ -1,0 +1,15 @@
+# Xcode user state
+*.xcuserstate
+*.xcuserdatad
+
+# Build artifacts
+DerivedData/
+*.app
+*.dSYM
+
+# macOS
+.DS_Store
+
+# Training data (large files)
+*.bin
+*.gguf

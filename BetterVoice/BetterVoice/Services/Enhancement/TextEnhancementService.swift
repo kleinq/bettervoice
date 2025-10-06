@@ -8,6 +8,13 @@
 
 import Foundation
 
+// MARK: - Errors
+
+enum EnhancementError: Error {
+    case missingAPIKey
+    case unsupportedProvider(String)
+}
+
 // MARK: - Protocol
 
 protocol TextEnhancementServiceProtocol {
@@ -28,6 +35,14 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
     private let fillerRemover = FillerWordRemover.shared
     private let formatApplier = FormatApplier.shared
     private let learningService = LearningService.shared
+    private let sentenceAnalyzer = SentenceAnalyzer()
+    private var classificationService: TextClassificationService?
+
+    // MARK: - Initialization
+
+    init(classificationService: TextClassificationService? = nil) {
+        self.classificationService = classificationService
+    }
 
     // MARK: - Public Methods
 
@@ -40,32 +55,55 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
 
         var enhanced = text
         var appliedRules: [String] = []
+        var detectedType = documentType
+
+        // Stage 0: Auto-classify if service available and documentType is .unknown
+        if documentType == .unknown, let classifier = classificationService {
+            do {
+                let classification = try await classifier.classify(text)
+                detectedType = classification.category
+                appliedRules.append("auto_classify_\(detectedType.rawValue)")
+            } catch {
+                Logger.shared.error("Auto-classification failed", error: error)
+                // Continue with .unknown
+            }
+        }
 
         // Stage 1: Normalize
         enhanced = normalize(enhanced)
         appliedRules.append("normalize")
 
         // Stage 2: Remove Fillers
-        let fillerResult = fillerRemover.remove(from: enhanced)
-        enhanced = fillerResult.cleanedText
-        _ = fillerResult.removedFillers  // Track but don't store in final model
-        appliedRules.append("remove_fillers")
+        let prefs = UserPreferences.load()
+        if prefs.removeFillerWords {
+            let fillerResult = fillerRemover.remove(from: enhanced)
+            enhanced = fillerResult.cleanedText
+            _ = fillerResult.removedFillers  // Track but don't store in final model
+            appliedRules.append("remove_fillers")
+        }
 
-        // Stage 3: Punctuate (handled by FormatApplier)
-        appliedRules.append("punctuate")
+        // Stage 3: Punctuate & Capitalize (using sentence analyzer)
+        if prefs.autoPunctuate || prefs.autoCapitalize {
+            enhanced = await sentenceAnalyzer.enhance(
+                enhanced,
+                autoPunctuate: prefs.autoPunctuate,
+                autoCapitalize: prefs.autoCapitalize
+            )
+            appliedRules.append("punctuate_capitalize")
+        }
 
-        // Stage 4: Format by document type
-        let formatResult = formatApplier.apply(to: enhanced, documentType: documentType)
+        // Stage 4: Format by document type (use detected type)
+        let formatResult = formatApplier.apply(to: enhanced, documentType: detectedType)
         enhanced = formatResult.formattedText
         _ = formatResult.changes  // Track but don't store in final model
-        appliedRules.append("format_\(documentType.rawValue)")
+        appliedRules.append("format_\(detectedType.rawValue)")
 
         // Stage 5: Apply Learning (if enabled)
         var patternsApplied = 0
         if applyLearning {
             do {
                 let beforeLearning = enhanced
-                enhanced = try learningService.applyLearned(text: enhanced, documentType: documentType)
+                enhanced = try learningService.applyLearned(text: enhanced, documentType: detectedType)
                 if enhanced != beforeLearning {
                     appliedRules.append("apply_learning")
                     patternsApplied = 1 // Simplified count
@@ -76,17 +114,20 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         }
 
         // Stage 6: Cloud Enhancement (if enabled)
-        if useCloud {
-            // TODO: Implement cloud LLM enhancement
-            // enhanced = try await applyCloudEnhancement(enhanced, documentType: documentType)
-            appliedRules.append("cloud_enhance")
+        if useCloud && prefs.externalLLMEnabled {
+            do {
+                enhanced = try await applyCloudEnhancement(enhanced, documentType: detectedType)
+                appliedRules.append("cloud_enhance")
+            } catch {
+                Logger.shared.error("Cloud enhancement failed", error: error)
+            }
         }
 
         return EnhancedText(
             id: UUID(),
             originalText: text,
             enhancedText: enhanced,
-            documentType: documentType,
+            documentType: detectedType,  // Use detected type in result
             appliedRules: appliedRules,
             learnedPatternsApplied: patternsApplied,
             cloudEnhanced: useCloud,
@@ -156,9 +197,42 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
     }
 
     private func applyCloudEnhancement(_ text: String, documentType: DocumentType) async throws -> String {
-        // This would call external LLM API (Claude/OpenAI)
-        // with document-type-specific prompts
-        // Placeholder for now
-        return text
+        let prefs = UserPreferences.load()
+
+        // Check if external LLM is enabled for this document type
+        let shouldEnhance: Bool
+        switch documentType {
+        case .email: shouldEnhance = prefs.llmEnhanceEmail
+        case .message: shouldEnhance = prefs.llmEnhanceMessage
+        case .document: shouldEnhance = prefs.llmEnhanceDocument
+        case .social: shouldEnhance = prefs.llmEnhanceSocial
+        case .code: shouldEnhance = prefs.llmEnhanceCode
+        case .search, .searchQuery, .unknown: shouldEnhance = false
+        }
+
+        guard shouldEnhance else {
+            return text // Skip LLM enhancement for this document type
+        }
+
+        guard let apiKey = prefs.externalLLMAPIKey, !apiKey.isEmpty else {
+            throw EnhancementError.missingAPIKey
+        }
+
+        let provider = prefs.externalLLMProvider ?? "claude"
+
+        switch provider.lowercased() {
+        case "claude":
+            let client = ClaudeAPIClient(apiKey: apiKey)
+            let systemPrompt = documentType.enhancementPrompt
+            return try await client.enhance(text: text, documentType: documentType, systemPrompt: systemPrompt)
+
+        case "openai":
+            let client = OpenAIAPIClient(apiKey: apiKey)
+            let systemPrompt = documentType.enhancementPrompt
+            return try await client.enhance(text: text, documentType: documentType, systemPrompt: systemPrompt)
+
+        default:
+            throw EnhancementError.unsupportedProvider(provider)
+        }
     }
 }

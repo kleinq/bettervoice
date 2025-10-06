@@ -39,13 +39,38 @@ final class AppState: ObservableObject {
     private let hotkeyManager = HotkeyManager.shared
     private let audioCaptureService = AudioCaptureService()
     private let whisperService = WhisperService()
-    private let textEnhancementService = TextEnhancementService()
     private let pasteService = PasteService.shared
     private let appDetectionService = AppDetectionService.shared
     private let permissionsManager = PermissionsManager.shared
     private let learningService = LearningService.shared
     private let preferencesStore = PreferencesStore.shared
     private let soundPlayer = SoundPlayer.shared
+
+    // Classification services
+    private let featureExtractor = FeatureExtractor()
+    private let dominantCharacteristicAnalyzer = DominantCharacteristicAnalyzer()
+    private lazy var classificationLogger: ClassificationLogger? = {
+        guard let dbQueue = try? DatabaseManager.shared.getQueue() else {
+            Logger.shared.error("Failed to get database queue for classification logger")
+            return nil
+        }
+        return ClassificationLogger(dbQueue: dbQueue)
+    }()
+    private lazy var textClassificationService: TextClassificationService? = {
+        guard let logger = classificationLogger else {
+            Logger.shared.error("Classification logger not available")
+            return nil
+        }
+        return TextClassificationService(
+            modelManager: .shared,
+            featureExtractor: featureExtractor,
+            analyzer: dominantCharacteristicAnalyzer,
+            logger: logger
+        )
+    }()
+    private lazy var textEnhancementService: TextEnhancementService = {
+        TextEnhancementService(classificationService: textClassificationService)
+    }()
 
     // MARK: - Private Properties
 
@@ -309,7 +334,7 @@ final class AppState: ObservableObject {
                 let timeout = ClipboardMonitor.calculateTimeout(for: enhancedText)
 
                 learningObservationTask = Task { [weak self] in
-                    await learningService.observe(
+                    await self?.learningService.observe(
                         originalText: enhancedText,
                         documentType: context.documentType,
                         timeoutSeconds: Int(timeout)
@@ -403,7 +428,13 @@ final class AppState: ObservableObject {
 
         // Detect document context
         let context = appDetectionService.detectContext()
-        Logger.shared.debug("Detected context: \(context.documentType), confidence: \(context.confidence)")
+        Logger.shared.info("📄 Document Type: \(context.documentType.displayName) (confidence: \(String(format: "%.0f%%", context.confidence * 100)))")
+        if let appName = context.appName {
+            Logger.shared.debug("Detected app: \(appName)")
+        }
+        if let url = context.url {
+            Logger.shared.debug("Detected URL: \(url)")
+        }
 
         // Get preferences
         let preferences = preferencesStore.preferences
@@ -417,6 +448,7 @@ final class AppState: ObservableObject {
         )
 
         Logger.shared.info("Enhancement completed, applied \(enhancedResult.appliedRules.count) rules")
+        Logger.shared.info("Enhanced text (\(enhancedResult.enhancedText.count) chars): \"\(enhancedResult.enhancedText)\"")
 
         return enhancedResult.enhancedText
     }

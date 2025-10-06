@@ -182,11 +182,22 @@ final class WhisperService: WhisperServiceProtocol {
 
     private func loadWhisperContext(modelPath: String) throws {
         // Use whisper.cpp C bridge
+        Logger.shared.info("Initializing whisper context from: \(modelPath)")
         whisperContext = whisper_bridge_init(modelPath)
 
         guard whisperContext != nil else {
+            Logger.shared.error("❌ whisper_bridge_init returned NULL for model: \(modelPath)")
             throw WhisperServiceError.transcriptionFailed("Failed to initialize whisper context")
         }
+
+        // Validate the context is actually usable
+        guard whisper_bridge_is_valid(whisperContext) else {
+            Logger.shared.error("❌ Whisper context is invalid after initialization")
+            whisperContext = nil
+            throw WhisperServiceError.transcriptionFailed("Whisper context validation failed")
+        }
+
+        Logger.shared.info("✅ Whisper context initialized successfully")
     }
 
     private func performWhisperTranscription(samples: [Float]) throws -> String {
@@ -194,13 +205,42 @@ final class WhisperService: WhisperServiceProtocol {
             throw WhisperServiceError.modelNotLoaded
         }
 
+        // Normalize audio - Whisper expects audio in [-1, 1] range
+        // Find the maximum absolute amplitude
+        let maxAmplitude = samples.map { abs($0) }.max() ?? 0.0
+        Logger.shared.info("Audio amplitude - max: \(maxAmplitude)")
+
+        // Normalize to target peak of 0.3 (conservative to avoid clipping)
+        let normalizedSamples: [Float]
+        if maxAmplitude > 0.001 {  // Only normalize if there's actual audio
+            let targetPeak: Float = 0.3
+            let gainFactor = targetPeak / maxAmplitude
+            normalizedSamples = samples.map { $0 * gainFactor }
+            let newMax = normalizedSamples.map { abs($0) }.max() ?? 0.0
+            Logger.shared.info("Audio normalized with gain factor \(gainFactor) - new max: \(newMax)")
+        } else {
+            normalizedSamples = samples
+            Logger.shared.warning("Audio too quiet to normalize (max: \(maxAmplitude))")
+        }
+
+        // Build initial_prompt from custom vocabulary
+        let prefs = UserPreferences.load()
+        let initialPrompt = prefs.customVocabulary.isEmpty ? nil : prefs.customVocabulary.joined(separator: ", ")
+
+        if let prompt = initialPrompt {
+            Logger.shared.debug("Using initial_prompt: \(prompt)")
+        }
+
+        Logger.shared.info("Calling whisper_bridge_transcribe with \(normalizedSamples.count) samples")
+
         // Use whisper bridge for transcription
         guard let resultCString = whisper_bridge_transcribe(
             context,
-            samples,
-            Int32(samples.count),
+            normalizedSamples,
+            Int32(normalizedSamples.count),
             "en",  // English
-            false  // No translation
+            false, // No translation
+            initialPrompt  // Custom vocabulary hint
         ) else {
             throw WhisperServiceError.transcriptionFailed("Whisper transcription returned nil")
         }
@@ -208,7 +248,10 @@ final class WhisperService: WhisperServiceProtocol {
         let result = String(cString: resultCString)
         free(resultCString) // Free the C string allocated by the bridge
 
-        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = result.trimmingCharacters(in: .whitespacesAndNewlines)
+        Logger.shared.info("Whisper raw result: '\(result)' (trimmed: '\(trimmed)', length: \(trimmed.count))")
+
+        return trimmed
     }
 
     private func extractSegments() -> [TranscriptionSegment] {

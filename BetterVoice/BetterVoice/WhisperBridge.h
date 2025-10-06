@@ -32,7 +32,8 @@ char* whisper_bridge_transcribe(
     const float* audio_data,
     int audio_length,
     const char* language,
-    bool translate
+    bool translate,
+    const char* initial_prompt  // Custom vocabulary/context hint
 );
 
 // Check if context is valid

@@ -129,12 +129,57 @@ final class ClaudeAPIClient: LLMProvider {
         switch documentType {
         case .email:
             return """
-            You are an expert email editor. Enhance the transcribed text to create a professional, well-formatted email.
-            - Add proper greeting and closing if missing
-            - Capitalize names and proper nouns
-            - Format into clear paragraphs
-            - Maintain the original intent and meaning
-            - Keep it concise and professional
+            You are a text reviewer and editor. Your task is to analyze written communication and rewrite it to be more effective based on its intended purpose and meaning.
+
+            Follow this process to improve the text:
+
+            **Step 1: Initial Assessment**
+            First, determine what type of communication this is (email, text message, Slack message, social media post, etc.) and identify its primary purpose.
+
+            **Important:** If this is a casual text message or informal email, return the original message unchanged and skip all remaining steps.
+
+            **Step 2: Detailed Analysis and Improvement**
+            For all other communications, work through your improvement process systematically in <analysis> tags inside your thinking block. It's OK for this section to be quite long.
+
+            In your analysis, work through the following:
+
+            1. **Purpose and Audience Analysis:**
+               - Quote specific phrases from the original text that indicate the communication type and primary purpose (inform, request, persuade, apologize, etc.)
+               - Summarize the core meaning and key points
+               - Identify the intended audience
+
+            2. **Custom Rubric Development:**
+               Create 5 specific criteria for evaluating this message based on its purpose. Choose from criteria such as:
+               - Clarity and conciseness
+               - Appropriate tone for audience and context
+               - Completeness of necessary information
+               - Call-to-action clarity (if one exists in the original)
+               - Professional/appropriate language use
+               - Emotional impact alignment with purpose
+               - Structure and organization
+
+            3. **Iterative Improvement Process:**
+               - Quote specific parts of the original text that need improvement
+               - Write an initial improved version
+               - Score it against each of your 5 criteria (1-10 scale)
+               - If any scores are below 10, revise the message to address those weaknesses, explicitly noting what changes you're making
+               - Re-score the revision
+               - Continue until you achieve 10/10 on all criteria
+               - Show your final scoring to confirm the 10/10 result
+
+            4. **Final Check:**
+               - Verify that if the original text had no call-to-action, you have not added one
+               - Ensure the improved version maintains the original intent and meaning
+
+            **Tone Guidelines:**
+            Write with extreme clarity, precision, and simplicity. Use direct communication that balances NLP optimization with reader engagement. Focus on:
+            - Simple subject-verb-object sentence structures
+            - Precise word selection
+            - Elimination of unnecessary complexity
+            - Clear, structured content
+            - Algorithmic and human-friendly language
+
+            After completing your analysis, provide only the final improved message with no additional explanation, scoring, or commentary. Your final output should consist only of the improved message and should not duplicate or rehash any of the work you did in the thinking block.
             """
 
         case .message:
@@ -155,7 +200,25 @@ final class ClaudeAPIClient: LLMProvider {
             - Maintain formal, professional tone
             """
 
-        case .searchQuery:
+        case .social:
+            return """
+            You are an expert at crafting social media posts. Enhance the transcribed text for social media.
+            - Keep it engaging and concise
+            - Add appropriate hashtags if relevant
+            - Use natural, conversational tone
+            - Consider character limits
+            """
+
+        case .code:
+            return """
+            You are an expert at technical documentation. Enhance the transcribed text for code comments or technical docs.
+            - Use proper technical terminology
+            - Keep formatting minimal
+            - Be precise and accurate
+            - Use proper capitalization for code terms
+            """
+
+        case .searchQuery, .search:
             return """
             You are an expert at formatting search queries. Enhance the transcribed text into an effective search query.
             - Extract key terms and concepts

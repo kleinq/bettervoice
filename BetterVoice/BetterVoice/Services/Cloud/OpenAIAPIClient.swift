@@ -151,7 +151,25 @@ final class OpenAIAPIClient: LLMProvider {
             - Maintain formal, professional tone
             """
 
-        case .searchQuery:
+        case .social:
+            return """
+            You are an expert at crafting social media posts. Enhance the transcribed text for social media.
+            - Keep it engaging and concise
+            - Add appropriate hashtags if relevant
+            - Use natural, conversational tone
+            - Consider character limits
+            """
+
+        case .code:
+            return """
+            You are an expert at technical documentation. Enhance the transcribed text for code comments or technical docs.
+            - Use proper technical terminology
+            - Keep formatting minimal
+            - Be precise and accurate
+            - Use proper capitalization for code terms
+            """
+
+        case .searchQuery, .search:
             return """
             You are an expert at formatting search queries. Enhance the transcribed text into an effective search query.
             - Extract key terms and concepts

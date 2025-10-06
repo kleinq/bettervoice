@@ -76,6 +76,27 @@ final class DatabaseManager {
             try db.create(index: "idx_learning_patterns_confidence", on: "learning_patterns", columns: ["confidence"])
         }
 
+        // Migration v2: Create classification_log table
+        migrator.registerMigration("createClassificationLog") { db in
+            try db.create(table: "classification_log") { t in
+                t.column("id", .text).primaryKey().notNull()
+                t.column("text", .text).notNull()
+
+                // Category with check constraint
+                t.column("category", .text).notNull()
+                    .check(sql: "category IN ('email', 'message', 'document', 'social', 'code', 'search')")
+
+                t.column("timestamp", .datetime).notNull()
+                t.column("textLength", .integer).notNull()
+                    .check { $0 > 0 }
+                t.column("extractedFeatures", .text)
+            }
+
+            // Indexes for classification log queries
+            try db.create(index: "idx_classification_log_timestamp", on: "classification_log", columns: ["timestamp"])
+            try db.create(index: "idx_classification_log_category", on: "classification_log", columns: ["category"])
+        }
+
         do {
             try migrator.migrate(dbQueue)
         } catch {

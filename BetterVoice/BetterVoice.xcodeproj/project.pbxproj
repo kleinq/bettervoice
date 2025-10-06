@@ -361,7 +361,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "# Post-build: Create symlink for whisper library\n# This must run AFTER Embed Libraries but BEFORE code signing\n\nFRAMEWORKS_DIR=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n\necho \"🔧 Creating whisper symlink in: ${FRAMEWORKS_DIR}\"\n\ncd \"${FRAMEWORKS_DIR}\" 2>/dev/null || {\n    echo \"⚠️  Frameworks directory not ready yet\"\n    exit 0\n}\n\nif [ -f \"libwhisper.1.8.0.dylib\" ]; then\n    # Remove existing symlink/file\n    rm -f libwhisper.1.dylib 2>/dev/null || true\n    \n    # Create symlink\n    ln -sf libwhisper.1.8.0.dylib libwhisper.1.dylib && \\\n        echo \"✅ Created symlink: libwhisper.1.dylib -> libwhisper.1.8.0.dylib\" || \\\n        echo \"❌ Failed to create symlink (sandbox restriction)\"\n    \n    ls -la libwhisper* 2>/dev/null || true\nelse\n    echo \"⚠️  libwhisper.1.8.0.dylib not found yet\"\nfi\n";
+			shellScript = "# Post-build: Fix whisper library references\n# This must run AFTER Embed Libraries but BEFORE code signing\n\n/Users/robertwinder/Projects/hack/bettervoice/scripts/post-build-fix.sh\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -441,7 +441,7 @@
 				DEVELOPMENT_TEAM = 9ZH8724RLM;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -507,7 +507,7 @@
 				DEVELOPMENT_TEAM = 9ZH8724RLM;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

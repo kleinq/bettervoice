@@ -24,7 +24,11 @@ final class FormatApplier {
             return formatMessage(text)
         case .document:
             return formatDocument(text)
-        case .searchQuery:
+        case .social:
+            return formatSocial(text)
+        case .code:
+            return formatCode(text)
+        case .searchQuery, .search:
             return formatSearchQuery(text)
         case .unknown:
             return formatGeneric(text)
@@ -128,6 +132,55 @@ final class FormatApplier {
         // Ensure proper punctuation
         formatted = addPunctuation(formatted)
         changes.append("Added punctuation")
+
+        return (formatted, changes)
+    }
+
+    // MARK: - Social Media Formatting
+
+    private func formatSocial(_ text: String) -> (String, [String]) {
+        var formatted = text
+        var changes: [String] = []
+
+        // Capitalize first letter
+        if let firstChar = formatted.first, firstChar.isLowercase {
+            formatted = formatted.prefix(1).uppercased() + formatted.dropFirst()
+            changes.append("Capitalized first letter")
+        }
+
+        // Keep concise (social media best practice)
+        let words = formatted.components(separatedBy: .whitespaces)
+        if words.count > 40 {
+            formatted = words.prefix(40).joined(separator: " ") + "..."
+            changes.append("Trimmed for social media length")
+        }
+
+        // Add minimal punctuation
+        if !formatted.hasSuffix(".") && !formatted.hasSuffix("!") && !formatted.hasSuffix("?") {
+            formatted += "."
+            changes.append("Added end punctuation")
+        }
+
+        return (formatted, changes)
+    }
+
+    // MARK: - Code/Technical Formatting
+
+    private func formatCode(_ text: String) -> (String, [String]) {
+        var formatted = text
+        var changes: [String] = []
+
+        // Capitalize first letter
+        if let firstChar = formatted.first, firstChar.isLowercase {
+            formatted = formatted.prefix(1).uppercased() + formatted.dropFirst()
+            changes.append("Capitalized first letter")
+        }
+
+        // Keep formatting minimal for code comments
+        if !formatted.hasSuffix(".") && !formatted.hasSuffix("!") && !formatted.hasSuffix("?") {
+            formatted += "."
+            changes.append("Added end punctuation")
+        }
 
         return (formatted, changes)
     }

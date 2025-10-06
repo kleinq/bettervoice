@@ -41,6 +41,15 @@ enum DocumentType: String, Codable {
 
     /// Get LLM prompt for this document type
     var enhancementPrompt: String {
+        // Check for custom prompt first (Feature 004-allow-editing-of)
+        let prefs = UserPreferences.load()
+        if let customPrompt = prefs.getCustomPrompt(for: self) {
+            Logger.shared.debug("Using custom prompt for \(self.rawValue)")
+            return customPrompt
+        }
+
+        // Fallback to default prompts
+        Logger.shared.debug("Using default prompt for \(self.rawValue)")
         switch self {
         case .email:
             return """

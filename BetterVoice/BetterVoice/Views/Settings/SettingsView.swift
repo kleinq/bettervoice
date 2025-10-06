@@ -29,9 +29,9 @@ struct SettingsView: View {
                     Label("Models", systemImage: "cpu")
                 }
 
-            CloudSettingsView()
+            EnhancementTab()
                 .tabItem {
-                    Label("Cloud", systemImage: "cloud")
+                    Label("Enhancement", systemImage: "wand.and.stars")
                 }
         }
         .frame(width: 700, height: 500)
@@ -433,75 +433,6 @@ struct ModelRowView: View {
             }
         }
         .padding(.vertical, 4)
-    }
-}
-
-struct CloudSettingsView: View {
-    @EnvironmentObject var preferencesStore: PreferencesStore
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("External LLM Enhancement")
-                        .font(.headline)
-
-                    Toggle("Enable Cloud Enhancement", isOn: $preferencesStore.preferences.externalLLMEnabled)
-
-                    if preferencesStore.preferences.externalLLMEnabled {
-                        Picker("Provider:", selection: Binding(
-                            get: { preferencesStore.preferences.externalLLMProvider ?? "claude" },
-                            set: {
-                                var updated = preferencesStore.preferences
-                                updated.externalLLMProvider = $0
-                                preferencesStore.savePreferences(updated)
-                            }
-                        )) {
-                            Text("Claude (Anthropic)").tag("claude")
-                            Text("OpenAI").tag("openai")
-                        }
-                        .pickerStyle(.segmented)
-
-                        TextField("API Key:", text: Binding(
-                            get: { preferencesStore.preferences.externalLLMAPIKey ?? "" },
-                            set: {
-                                var updated = preferencesStore.preferences
-                                updated.externalLLMAPIKey = $0
-                                preferencesStore.savePreferences(updated)
-                            }
-                        ))
-                        .textFieldStyle(.roundedBorder)
-
-                        Text("Your API key is stored securely in Keychain")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Divider()
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Text Enhancement")
-                        .font(.headline)
-
-                    Toggle("Remove filler words", isOn: $preferencesStore.preferences.removeFillerWords)
-                    Toggle("Auto-capitalize", isOn: $preferencesStore.preferences.autoCapitalize)
-                    Toggle("Auto-punctuate", isOn: $preferencesStore.preferences.autoPunctuate)
-                }
-
-                Divider()
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Learning")
-                        .font(.headline)
-
-                    Toggle("Learn from edits", isOn: $preferencesStore.preferences.learningSystemEnabled)
-                    Toggle("Apply learned patterns", isOn: $preferencesStore.preferences.applyLearningPatterns)
-                        .disabled(!preferencesStore.preferences.learningSystemEnabled)
-                }
-            }
-            .padding(20)
-        }
     }
 }
 

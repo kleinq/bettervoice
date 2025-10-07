@@ -32,7 +32,7 @@ struct BetterVoiceApp: App {
         } label: {
             StatusIconView(status: appState.status)
         }
-        .menuBarExtraStyle(.window)
+        .menuBarExtraStyle(.menu)
 
         // Settings window (shown on demand)
         Settings {
@@ -70,7 +70,39 @@ struct BetterVoiceApp: App {
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
 
+    private var windowObservers: [NSObjectProtocol] = []
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Observe multiple window events to ensure Settings window comes to front
+        let mainObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeMainNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let window = notification.object as? NSWindow,
+               window.title == "Settings" {
+                Logger.shared.info("Settings window became main, bringing to front")
+                window.level = .floating
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+
+        let keyObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let window = notification.object as? NSWindow,
+               window.title == "Settings" {
+                Logger.shared.info("Settings window became key, bringing to front")
+                window.level = .floating
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+
+        windowObservers = [mainObserver, keyObserver]
         Logger.shared.info("BetterVoice launched")
 
         // Initialize app state and services
@@ -96,6 +128,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         Logger.shared.info("BetterVoice terminating")
+
+        // Remove observers
+        for observer in windowObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
 
         // Cleanup
         Task { @MainActor in

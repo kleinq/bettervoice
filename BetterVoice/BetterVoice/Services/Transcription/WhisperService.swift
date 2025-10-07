@@ -225,10 +225,15 @@ final class WhisperService: WhisperServiceProtocol {
 
         // Build initial_prompt from custom vocabulary
         let prefs = UserPreferences.load()
+        Logger.shared.info("Custom vocabulary count: \(prefs.customVocabulary.count)")
+        Logger.shared.info("Custom vocabulary words: \(prefs.customVocabulary)")
+
         let initialPrompt = prefs.customVocabulary.isEmpty ? nil : prefs.customVocabulary.joined(separator: ", ")
 
         if let prompt = initialPrompt {
-            Logger.shared.debug("Using initial_prompt: \(prompt)")
+            Logger.shared.info("Using initial_prompt for Whisper: \(prompt)")
+        } else {
+            Logger.shared.info("No custom vocabulary - initial_prompt is nil")
         }
 
         Logger.shared.info("Calling whisper_bridge_transcribe with \(normalizedSamples.count) samples")

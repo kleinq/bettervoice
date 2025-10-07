@@ -33,6 +33,11 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Enhancement", systemImage: "wand.and.stars")
                 }
+
+            PromptsTab()
+                .tabItem {
+                    Label("Prompts", systemImage: "text.quote")
+                }
         }
         .frame(width: 700, height: 500)
     }

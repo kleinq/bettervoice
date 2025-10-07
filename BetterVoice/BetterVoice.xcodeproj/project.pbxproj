@@ -342,7 +342,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif which swiftlint >/dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = "# SwiftLint disabled for faster builds\n# Uncomment to re-enable:\n# if which swiftlint >/dev/null; then\n#   swiftlint\n# else\n#   echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\n# fi\n";
 		};
 		D1A681242E8C767E00E1151B /* Fix Whisper Library Symlinks */ = {
 			isa = PBXShellScriptBuildPhase;

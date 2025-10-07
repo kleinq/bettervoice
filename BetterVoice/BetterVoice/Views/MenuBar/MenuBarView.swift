@@ -130,7 +130,7 @@ struct MenuBarView: View {
                 .padding(.horizontal, 4)
             } else {
                 Button {
-                    openSettingsWindowLegacy()
+                    openSettingsLegacy()
                 } label: {
                     HStack {
                         Image(systemName: "gear")
@@ -231,7 +231,7 @@ struct MenuBarView: View {
         NSApplication.shared.orderFrontStandardAboutPanel(nil)
     }
 
-    private func openSettingsWindowLegacy() {
+    private func openSettingsLegacy() {
         NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
     }
 }

@@ -1,6 +1,6 @@
 .PHONY: build run clean
 
-DERIVED_DATA := /Users/robertwinder/Library/Developer/Xcode/DerivedData/BetterVoice-exfoadfrwnjtreabbnzxrlqupgxl
+DERIVED_DATA := $(shell find ~/Library/Developer/Xcode/DerivedData -maxdepth 1 -name "BetterVoice-*" -type d | head -n 1)
 APP_PATH := $(DERIVED_DATA)/Build/Products/Debug/BetterVoice.app
 FRAMEWORKS_DIR := $(APP_PATH)/Contents/Frameworks
 

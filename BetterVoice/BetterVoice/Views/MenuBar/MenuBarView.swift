@@ -29,6 +29,7 @@ struct MenuButtonStyle: ButtonStyle {
 struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var preferencesStore: PreferencesStore
+    @State private var permissionWarnings: [PermissionType] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -47,6 +48,20 @@ struct MenuBarView: View {
                         .foregroundColor(.secondary)
                 }
 
+                // Permission warnings
+                if !permissionWarnings.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                            .font(.caption2)
+
+                        Text(permissionWarningText)
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.top, 2)
+                }
+
                 // Learning indicator
                 if ClipboardMonitor.shared.isActive {
                     HStack(spacing: 4) {
@@ -62,6 +77,9 @@ struct MenuBarView: View {
                 }
             }
             .padding()
+            .onAppear {
+                checkPermissions()
+            }
 
             Divider()
 
@@ -219,6 +237,32 @@ struct MenuBarView: View {
         case .pasting: return .blue
         case .error: return .red
         }
+    }
+
+    private var permissionWarningText: String {
+        if permissionWarnings.count == 1 {
+            let permission = permissionWarnings[0]
+            return "\(permission == .microphone ? "Microphone" : "Accessibility") permission needed"
+        } else if permissionWarnings.count > 1 {
+            return "\(permissionWarnings.count) permissions needed"
+        }
+        return ""
+    }
+
+    private func checkPermissions() {
+        let manager = PermissionsManager.shared
+        let permissions = manager.checkAllPermissions()
+
+        var warnings: [PermissionType] = []
+
+        if permissions[.microphone] != .granted {
+            warnings.append(.microphone)
+        }
+        if permissions[.accessibility] != .granted {
+            warnings.append(.accessibility)
+        }
+
+        permissionWarnings = warnings
     }
 
     private func openLogsFolder() {

@@ -39,6 +39,7 @@ actor SentenceAnalyzer {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return .statement }
 
+        let lowercased = trimmed.lowercased()
         let words = trimmed.components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
         guard !words.isEmpty else { return .statement }
@@ -46,9 +47,42 @@ actor SentenceAnalyzer {
         let firstWord = words[0].lowercased()
             .trimmingCharacters(in: .punctuationCharacters)
 
-        // Check for question indicators
+        // Check for question indicators at the start
         if questionWords.contains(firstWord) {
             return .question
+        }
+
+        // Check for tag questions at the end (isn't it, don't you, can't we, etc.)
+        let tagQuestionPatterns = [
+            "isn't it", "aren't they", "wasn't it", "weren't they",
+            "don't you", "doesn't it", "didn't they",
+            "can't you", "couldn't you", "won't you", "wouldn't you",
+            "shouldn't you", "isn't that", "right"
+        ]
+        for pattern in tagQuestionPatterns {
+            if lowercased.hasSuffix(pattern) {
+                return .question
+            }
+        }
+
+        // Check for questions with "or" (Is it this or that?)
+        if lowercased.contains(" or ") && questionWords.contains(firstWord) {
+            return .question
+        }
+
+        // Check for indirect questions that start with question words
+        // "what can we do", "how should I", "why would you", etc.
+        if words.count >= 3 {
+            let secondWord = words[1].lowercased()
+                .trimmingCharacters(in: .punctuationCharacters)
+
+            // WH-word + modal/auxiliary verb patterns
+            let questionStarters = ["what", "how", "why", "when", "where", "which", "who"]
+            let modalsAndAux = ["can", "could", "should", "would", "will", "shall", "do", "does", "did", "is", "are", "was", "were", "have", "has", "had"]
+
+            if questionStarters.contains(firstWord) && modalsAndAux.contains(secondWord) {
+                return .question
+            }
         }
 
         // Check for command/imperative
@@ -80,25 +114,76 @@ actor SentenceAnalyzer {
 
     /// Apply proper punctuation based on sentence type
     func applyPunctuation(_ text: String) -> String {
-        var result = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return trimmed }
 
-        // Remove existing ending punctuation
-        while !result.isEmpty && CharacterSet(charactersIn: ".!?,;:").contains(result.unicodeScalars.last!) {
-            result = String(result.dropLast())
+        // Split into sentences (rough split on ., !, ?)
+        let sentences = splitIntoSentences(trimmed)
+
+        // Analyze and punctuate each sentence
+        let punctuatedSentences = sentences.map { sentence -> String in
+            var result = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Remove existing ending punctuation
+            while !result.isEmpty && CharacterSet(charactersIn: ".!?,;:").contains(result.unicodeScalars.last!) {
+                result = String(result.dropLast())
+            }
+
+            let type = analyzeSentenceType(result)
+
+            switch type {
+            case .question:
+                return result + "?"
+            case .exclamation:
+                return result + "!"
+            case .command:
+                return result + "."
+            case .statement:
+                return result + "."
+            }
         }
 
-        let type = analyzeSentenceType(result)
+        return punctuatedSentences.joined(separator: " ")
+    }
 
-        switch type {
-        case .question:
-            return result + "?"
-        case .exclamation:
-            return result + "!"
-        case .command:
-            return result + "."
-        case .statement:
-            return result + "."
+    /// Split text into sentences
+    private func splitIntoSentences(_ text: String) -> [String] {
+        // Split on sentence boundaries (., !, ?)
+        let pattern = #"[.!?]+"#
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return [text]
         }
+
+        let nsString = text as NSString
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsString.length))
+
+        var sentences: [String] = []
+        var lastEnd = 0
+
+        for match in matches {
+            let sentenceRange = NSRange(location: lastEnd, length: match.range.location - lastEnd)
+            let sentence = nsString.substring(with: sentenceRange)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if !sentence.isEmpty {
+                sentences.append(sentence)
+            }
+
+            lastEnd = match.range.location + match.range.length
+        }
+
+        // Add remaining text if any
+        if lastEnd < nsString.length {
+            let remaining = nsString.substring(from: lastEnd)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if !remaining.isEmpty {
+                sentences.append(remaining)
+            }
+        }
+
+        // If no sentences were found, return the whole text
+        return sentences.isEmpty ? [text] : sentences
     }
 
     /// Capitalize sentences properly

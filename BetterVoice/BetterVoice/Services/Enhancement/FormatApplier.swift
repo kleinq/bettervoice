@@ -16,16 +16,16 @@ final class FormatApplier {
 
     // MARK: - Public Methods
 
-    func apply(to text: String, documentType: DocumentType) -> (formattedText: String, changes: [String]) {
+    func apply(to text: String, documentType: DocumentType, recipient: String? = nil, metadata: [String: String] = [:]) -> (formattedText: String, changes: [String]) {
         switch documentType {
         case .email:
-            return formatEmail(text)
+            return formatEmail(text, recipient: recipient)
         case .message:
-            return formatMessage(text)
+            return formatMessage(text, recipient: recipient)
         case .document:
-            return formatDocument(text)
+            return formatDocument(text, metadata: metadata)
         case .social:
-            return formatSocial(text)
+            return formatSocial(text, metadata: metadata)
         case .code:
             return formatCode(text)
         case .searchQuery, .search:
@@ -37,7 +37,7 @@ final class FormatApplier {
 
     // MARK: - Email Formatting
 
-    private func formatEmail(_ text: String) -> (String, [String]) {
+    private func formatEmail(_ text: String, recipient: String? = nil) -> (String, [String]) {
         var formatted = text
         var changes: [String] = []
 
@@ -52,8 +52,8 @@ final class FormatApplier {
 
         // Add greeting if missing
         if !hasGreeting(formatted) {
-            formatted = addGreeting(formatted)
-            changes.append("Added greeting")
+            formatted = addGreeting(formatted, recipient: recipient)
+            changes.append("Added greeting\(recipient != nil ? " with recipient" : "")")
         }
 
         // Break into paragraphs
@@ -75,9 +75,15 @@ final class FormatApplier {
 
     // MARK: - Message Formatting
 
-    private func formatMessage(_ text: String) -> (String, [String]) {
+    private func formatMessage(_ text: String, recipient: String? = nil) -> (String, [String]) {
         var formatted = text
         var changes: [String] = []
+
+        // Add recipient prefix for text messages if specified
+        if let recipient = recipient, !formatted.lowercased().hasPrefix("hi ") {
+            formatted = "Hi \(recipient), " + formatted
+            changes.append("Added recipient greeting")
+        }
 
         // Capitalize first letter
         if let firstChar = formatted.first, firstChar.isLowercase {
@@ -106,9 +112,29 @@ final class FormatApplier {
 
     // MARK: - Document Formatting
 
-    private func formatDocument(_ text: String) -> (String, [String]) {
+    private func formatDocument(_ text: String, metadata: [String: String] = [:]) -> (String, [String]) {
         var formatted = text
         var changes: [String] = []
+
+        // Check for special formatting instructions
+        if let format = metadata["format"] {
+            switch format {
+            case "bullet_points":
+                formatted = formatAsBulletPoints(text)
+                changes.append("Formatted as bullet points")
+                return (formatted, changes)
+            case "todo_list":
+                formatted = formatAsTodoList(text)
+                changes.append("Formatted as to-do list")
+                return (formatted, changes)
+            case "memo":
+                formatted = formatAsMemo(text)
+                changes.append("Formatted as memo")
+                return (formatted, changes)
+            default:
+                break
+            }
+        }
 
         // Split into sentences
         let sentences = splitIntoSentences(formatted)
@@ -138,7 +164,7 @@ final class FormatApplier {
 
     // MARK: - Social Media Formatting
 
-    private func formatSocial(_ text: String) -> (String, [String]) {
+    private func formatSocial(_ text: String, metadata: [String: String] = [:]) -> (String, [String]) {
         var formatted = text
         var changes: [String] = []
 
@@ -148,15 +174,40 @@ final class FormatApplier {
             changes.append("Capitalized first letter")
         }
 
-        // Keep concise (social media best practice)
-        let words = formatted.components(separatedBy: .whitespaces)
-        if words.count > 40 {
-            formatted = words.prefix(40).joined(separator: " ") + "..."
-            changes.append("Trimmed for social media length")
+        // Check for explicit social media format (from voice command)
+        if let format = metadata["format"] {
+            // Tweet: enforce character limit
+            if format == "tweet", let limitStr = metadata["limit"], let limit = Int(limitStr) {
+                if formatted.count > limit {
+                    formatted = String(formatted.prefix(limit - 3)) + "..."
+                    changes.append("Trimmed to \(limit) characters for Twitter")
+                }
+            }
+            // LinkedIn or other social: trim to reasonable length
+            else if format == "linkedin" {
+                let words = formatted.components(separatedBy: .whitespaces)
+                if words.count > 150 {
+                    formatted = words.prefix(150).joined(separator: " ") + "..."
+                    changes.append("Trimmed for LinkedIn length")
+                }
+            }
+        } else {
+            // Auto-classified as social (no explicit voice command)
+            // Only trim if text is already short (likely meant to be a post)
+            // Don't trim long-form content that was mis-classified
+            let words = formatted.components(separatedBy: .whitespaces)
+
+            // Only trim if original is < 100 words AND > 40 words
+            // (If it's already very long, it's probably not meant to be social media)
+            if words.count > 40 && words.count < 100 {
+                formatted = words.prefix(40).joined(separator: " ") + "..."
+                changes.append("Trimmed for social media length")
+            }
+            // If > 100 words, it's likely mis-classified - don't trim
         }
 
         // Add minimal punctuation
-        if !formatted.hasSuffix(".") && !formatted.hasSuffix("!") && !formatted.hasSuffix("?") {
+        if !formatted.hasSuffix(".") && !formatted.hasSuffix("!") && !formatted.hasSuffix("?") && !formatted.hasSuffix("...") {
             formatted += "."
             changes.append("Added end punctuation")
         }
@@ -240,7 +291,10 @@ final class FormatApplier {
         return greetings.contains { lowerText.hasPrefix($0) }
     }
 
-    private func addGreeting(_ text: String) -> String {
+    private func addGreeting(_ text: String, recipient: String? = nil) -> String {
+        if let recipient = recipient {
+            return "Hi \(recipient),\n\n" + text
+        }
         return "Hi,\n\n" + text
     }
 
@@ -344,5 +398,53 @@ final class FormatApplier {
         }
 
         return formatted.joined(separator: "\n")
+    }
+
+    // MARK: - Special Format Helpers
+
+    private func formatAsBulletPoints(_ text: String) -> String {
+        let sentences = splitIntoSentences(text)
+        let bullets = sentences.map { sentence -> String in
+            let trimmed = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return "" }
+            let capitalized = trimmed.prefix(1).uppercased() + trimmed.dropFirst()
+            return "• \(capitalized)"
+        }
+        return bullets.filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+
+    private func formatAsTodoList(_ text: String) -> String {
+        let sentences = splitIntoSentences(text)
+        let todos = sentences.map { sentence -> String in
+            let trimmed = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return "" }
+            let capitalized = trimmed.prefix(1).uppercased() + trimmed.dropFirst()
+            return "☐ \(capitalized)"
+        }
+        return todos.filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+
+    private func formatAsMemo(_ text: String) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        let dateString = dateFormatter.string(from: Date())
+
+        var memo = "MEMO\n"
+        memo += "Date: \(dateString)\n\n"
+
+        // Capitalize first letter
+        var content = text
+        if let firstChar = content.first, firstChar.isLowercase {
+            content = content.prefix(1).uppercased() + content.dropFirst()
+        }
+
+        // Add paragraphs for longer content
+        if content.count > 200 {
+            content = addParagraphs(content)
+        }
+
+        memo += content
+
+        return memo
     }
 }

@@ -36,6 +36,8 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
     private let formatApplier = FormatApplier.shared
     private let learningService = LearningService.shared
     private let sentenceAnalyzer = SentenceAnalyzer()
+    private let voiceCommandParser = VoiceCommandParser.shared
+    private let selfCorrectionHandler = SelfCorrectionHandler.shared
     private var classificationService: TextClassificationService?
 
     // MARK: - Initialization
@@ -56,9 +58,32 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         var enhanced = text
         var appliedRules: [String] = []
         var detectedType = documentType
+        var voiceCommandInstruction: VoiceCommandInstruction?
+
+        // Stage -1: Voice Command Detection
+        // Check if text starts with "BV" or "Better Voice" command prefix
+        if let instruction = voiceCommandParser.parse(text) {
+            Logger.shared.info("🎤 Voice command detected: \(instruction.instruction)")
+            voiceCommandInstruction = instruction
+
+            // Override document type based on instruction
+            detectedType = instruction.targetDocumentType
+
+            // Use the extracted content (without prefix and instruction)
+            enhanced = instruction.content
+
+            appliedRules.append("voice_command_\(instruction.targetDocumentType.rawValue)")
+
+            // Log recipient if present
+            if let recipient = instruction.recipient {
+                Logger.shared.info("📧 Recipient: \(recipient)")
+                appliedRules.append("recipient_\(recipient)")
+            }
+        }
 
         // Stage 0: Auto-classify if service available and documentType is .unknown
-        if documentType == .unknown {
+        // (Skip if voice command already determined the type)
+        if documentType == .unknown && voiceCommandInstruction == nil {
             if let classifier = classificationService {
                 do {
                     Logger.shared.info("🤖 Running ML classification...")
@@ -79,6 +104,20 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         enhanced = normalize(enhanced)
         Logger.shared.debug("📝 After normalize: '\(enhanced)'")
         appliedRules.append("normalize")
+
+        // Stage 1.5: Remove Self-Corrections
+        let beforeCorrection = enhanced
+        enhanced = selfCorrectionHandler.process(enhanced)
+        if enhanced != beforeCorrection {
+            Logger.shared.debug("🔧 After self-correction: '\(enhanced)'")
+            appliedRules.append("self_correction")
+
+            // Log detected corrections for debugging
+            let corrections = selfCorrectionHandler.analyzeCorrections(beforeCorrection)
+            if !corrections.isEmpty {
+                Logger.shared.info("Detected \(corrections.count) self-correction(s): \(corrections.map { $0.marker })")
+            }
+        }
 
         // Stage 2: Remove Fillers
         let prefs = UserPreferences.load()
@@ -102,9 +141,24 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         }
 
         // Stage 4: Format by document type (use detected type)
-        let formatResult = formatApplier.apply(to: enhanced, documentType: detectedType)
+        // Pass recipient and metadata from voice command if available
+        let beforeFormat = enhanced
+        let formatResult = formatApplier.apply(
+            to: enhanced,
+            documentType: detectedType,
+            recipient: voiceCommandInstruction?.recipient,
+            metadata: voiceCommandInstruction?.metadata ?? [:]
+        )
         enhanced = formatResult.formattedText
         Logger.shared.debug("📐 After format (\(detectedType.rawValue)): '\(enhanced)'")
+
+        // Warn if content was significantly truncated (possible mis-classification)
+        let beforeLength = beforeFormat.count
+        let afterLength = enhanced.count
+        if beforeLength > 200 && Double(afterLength) < Double(beforeLength) * 0.5 {
+            Logger.shared.warning("⚠️ Content significantly truncated: \(beforeLength) → \(afterLength) chars. Type: \(detectedType.rawValue). This may indicate mis-classification.")
+        }
+
         _ = formatResult.changes  // Track but don't store in final model
         appliedRules.append("format_\(detectedType.rawValue)")
 

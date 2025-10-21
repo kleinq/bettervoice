@@ -144,14 +144,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func initializeApp() async {
         let startTime = Date()
 
-        // Check permissions (but don't request yet - wait for user action)
+        // Check permissions on startup
         let permissionsManager = PermissionsManager.shared
         let allPermissions = permissionsManager.checkAllPermissions()
 
         Logger.shared.info("Permission status: \(allPermissions)")
 
-        // Log permission status but don't request on launch
-        // Permissions will be requested when user tries to use features
+        // Check if this is not the first launch (onboarding handles permissions for first launch)
+        let prefs = PreferencesStore.shared.preferences
+        let hasCompletedOnboarding = prefs.hasCompletedOnboarding
+
+        // If onboarding is complete, check for missing required permissions
+        if hasCompletedOnboarding {
+            let missingPermissions = getMissingPermissions(allPermissions)
+
+            if !missingPermissions.isEmpty {
+                Logger.shared.warning("Missing permissions detected: \(missingPermissions)")
+
+                // Wait a moment for the app to fully launch
+                try? await Task.sleep(nanoseconds: 500_000_000)
+
+                // Show alert about missing permissions
+                showPermissionsAlert(missingPermissions: missingPermissions)
+            }
+        }
+
+        // Log permission status for debugging
         if allPermissions[.microphone] != .granted {
             Logger.shared.info("Microphone permission not granted - will request on first recording attempt")
         }
@@ -176,6 +194,69 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Verify <2s launch time (PR-004)
         if elapsed > 2.0 {
             Logger.shared.warning("App launch time exceeded 2s requirement (PR-004): \(elapsed)s")
+        }
+    }
+
+    // MARK: - Permission Helpers
+
+    @MainActor
+    private func getMissingPermissions(_ permissions: [PermissionType: PermissionStatus]) -> [PermissionType] {
+        var missing: [PermissionType] = []
+
+        // Microphone is required
+        if permissions[.microphone] != .granted {
+            missing.append(.microphone)
+        }
+
+        // Accessibility is strongly recommended
+        if permissions[.accessibility] != .granted {
+            missing.append(.accessibility)
+        }
+
+        return missing
+    }
+
+    @MainActor
+    private func showPermissionsAlert(missingPermissions: [PermissionType]) {
+        let alert = NSAlert()
+        alert.messageText = "Permissions Required"
+
+        var message = "BetterVoice needs the following permissions to work properly:\n\n"
+
+        for permission in missingPermissions {
+            switch permission {
+            case .microphone:
+                message += "• Microphone: Required for voice recording\n"
+            case .accessibility:
+                message += "• Accessibility: Required for pasting transcribed text\n"
+            case .screenRecording:
+                message += "• Screen Recording: Optional, for URL detection\n"
+            }
+        }
+
+        message += "\nWould you like to open Settings to grant these permissions?"
+
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open Settings")
+        alert.addButton(withTitle: "Later")
+
+        let response = alert.runModal()
+
+        if response == .alertFirstButtonReturn {
+            // Open Settings window
+            openSettingsWindow()
+        }
+    }
+
+    @MainActor
+    private func openSettingsWindow() {
+        // Use NSApp to open settings
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+
+        // Also try the SwiftUI way
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security") {
+            // Note: This is a fallback, the Settings window should open via the selector above
         }
     }
 }

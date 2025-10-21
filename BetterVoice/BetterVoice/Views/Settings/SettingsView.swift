@@ -19,6 +19,11 @@ struct SettingsView: View {
                     Label("General", systemImage: "gear")
                 }
 
+            PermissionsTab()
+                .tabItem {
+                    Label("Permissions", systemImage: "lock.shield")
+                }
+
             AudioFeedbackTab(preferencesStore: preferencesStore)
                 .tabItem {
                     Label("Audio Feedback", systemImage: "speaker.wave.2")

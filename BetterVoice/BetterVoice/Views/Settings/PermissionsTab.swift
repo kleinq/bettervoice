@@ -11,11 +11,48 @@ struct PermissionsTab: View {
     @State private var microphoneStatus: PermissionStatus = .notDetermined
     @State private var accessibilityStatus: PermissionStatus = .notDetermined
     @State private var screenRecordingStatus: PermissionStatus = .notDetermined
+    @State private var isRefreshing = false
 
     private let permissionsManager = PermissionsManager.shared
 
     var body: some View {
         Form {
+            Section {
+                HStack {
+                    Text("Permissions Status")
+                        .font(.headline)
+
+                    Spacer()
+
+                    Button {
+                        refreshPermissions()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Refresh")
+                        }
+                    }
+                    .disabled(isRefreshing)
+                }
+                .padding(.bottom, 8)
+
+                if allPermissionsGranted {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("All permissions granted")
+                            .foregroundColor(.green)
+                    }
+                } else {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text("Some permissions are missing")
+                            .foregroundColor(.orange)
+                    }
+                }
+            }
+
             Section("Required Permissions") {
                 // Microphone
                 HStack {
@@ -93,17 +130,40 @@ struct PermissionsTab: View {
                 }
             }
         }
-        
+
         .frame(width: 500, height: 400)
         .onAppear {
             checkPermissions()
+            startPeriodicRefresh()
         }
+    }
+
+    private var allPermissionsGranted: Bool {
+        microphoneStatus == .granted && accessibilityStatus == .granted
     }
 
     private func checkPermissions() {
         microphoneStatus = permissionsManager.checkPermission(.microphone)
         accessibilityStatus = permissionsManager.checkPermission(.accessibility)
         screenRecordingStatus = permissionsManager.checkPermission(.screenRecording)
+    }
+
+    private func refreshPermissions() {
+        isRefreshing = true
+        checkPermissions()
+
+        // Brief delay to show refresh animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            isRefreshing = false
+        }
+    }
+
+    private func startPeriodicRefresh() {
+        // Refresh permissions every 2 seconds while the tab is visible
+        // This helps detect when user grants permissions in System Settings
+        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+            checkPermissions()
+        }
     }
 
     private func requestMicrophonePermission() {

@@ -81,23 +81,31 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
             }
         }
 
-        // Stage 0: Auto-classify if service available and documentType is .unknown
-        // (Skip if voice command already determined the type)
+        // Stage 0: Auto-classify DISABLED
+        // User feedback: ML classifier causes too many mis-classifications
+        // Only use document type from voice commands or user selection
+        // TODO: Re-enable with preference flag when classification accuracy improves (target: 80%+)
+        //
+        // if documentType == .unknown && voiceCommandInstruction == nil {
+        //     if let classifier = classificationService {
+        //         do {
+        //             Logger.shared.info("🤖 Running ML classification...")
+        //             let classification = try await classifier.classify(text)
+        //             detectedType = classification.category
+        //             Logger.shared.info("✅ ML Result: \(detectedType.rawValue)")
+        //             appliedRules.append("auto_classify_\(detectedType.rawValue)")
+        //         } catch {
+        //             Logger.shared.error("❌ Auto-classification failed", error: error)
+        //             // Continue with .unknown
+        //         }
+        //     } else {
+        //         Logger.shared.warning("⚠️ No classifier available - using .unknown")
+        //     }
+        // }
+
+        // If no voice command and still .unknown, keep as .unknown for generic formatting
         if documentType == .unknown && voiceCommandInstruction == nil {
-            if let classifier = classificationService {
-                do {
-                    Logger.shared.info("🤖 Running ML classification...")
-                    let classification = try await classifier.classify(text)
-                    detectedType = classification.category
-                    Logger.shared.info("✅ ML Result: \(detectedType.rawValue)")
-                    appliedRules.append("auto_classify_\(detectedType.rawValue)")
-                } catch {
-                    Logger.shared.error("❌ Auto-classification failed", error: error)
-                    // Continue with .unknown
-                }
-            } else {
-                Logger.shared.warning("⚠️ No classifier available - using .unknown")
-            }
+            Logger.shared.info("📝 No voice command detected - using generic formatting")
         }
 
         // Stage 1: Normalize

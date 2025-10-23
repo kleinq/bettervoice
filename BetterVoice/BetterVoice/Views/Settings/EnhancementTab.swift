@@ -31,19 +31,6 @@ struct EnhancementTab: View {
                     .foregroundColor(.secondary)
             }
 
-            Section("Learning System") {
-                Toggle("Enable learning from edits", isOn: $preferencesStore.preferences.learningSystemEnabled)
-                Text("BetterVoice learns from your edits to improve transcription quality")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Toggle("Apply learned patterns", isOn: $preferencesStore.preferences.applyLearningPatterns)
-                    .disabled(!preferencesStore.preferences.learningSystemEnabled)
-                Text("Automatically apply patterns learned from previous edits")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
             Section("Cloud Enhancement") {
                 Toggle("Enable external LLM", isOn: $preferencesStore.preferences.externalLLMEnabled)
                 Text("Use Claude or OpenAI for advanced text enhancement")

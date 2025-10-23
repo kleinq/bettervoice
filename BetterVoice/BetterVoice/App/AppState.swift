@@ -42,7 +42,6 @@ final class AppState: ObservableObject {
     private let pasteService = PasteService.shared
     private let appDetectionService = AppDetectionService.shared
     private let permissionsManager = PermissionsManager.shared
-    private let learningService = LearningService.shared
     private let preferencesStore = PreferencesStore.shared
     private let soundPlayer = SoundPlayer.shared
 
@@ -76,7 +75,6 @@ final class AppState: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
     private var recordingStartTime: Date?
-    private var learningObservationTask: Task<Void, Never>?
     private var currentHotkeyKeyCode: UInt32?
     private var currentHotkeyModifiers: UInt32?
     private var currentModelSize: WhisperModelSize?
@@ -185,19 +183,6 @@ final class AppState: ObservableObject {
             .store(in: &cancellables)
     }
 
-    // MARK: - Public Control Methods
-
-    /// Stop learning observation manually
-    func stopLearning() async {
-        guard learningObservationTask != nil else { return }
-
-        learningObservationTask?.cancel()
-        learningObservationTask = nil
-        await ClipboardMonitor.shared.stopMonitoring()
-
-        Logger.shared.info("Learning observation stopped manually")
-    }
-
     // MARK: - Workflow Orchestration
 
     private func handleHotkeyPress() async {
@@ -256,13 +241,6 @@ final class AppState: ObservableObject {
         guard status == .ready else {
             Logger.shared.warning("Cannot start recording, current status: \(status)")
             return
-        }
-
-        // Cancel any ongoing learning observation from previous paste
-        if let task = learningObservationTask {
-            task.cancel()
-            learningObservationTask = nil
-            Logger.shared.info("Cancelled previous learning observation")
         }
 
         do {
@@ -328,24 +306,7 @@ final class AppState: ObservableObject {
             // Play completion sound
             soundPlayer.playEvent(.paste, preferences: preferences)
 
-            // Learn from edits (run in background, don't block)
-            if preferences.learningSystemEnabled {
-                let context = appDetectionService.detectContext()
-                let timeout = ClipboardMonitor.calculateTimeout(for: enhancedText)
-
-                learningObservationTask = Task { [weak self] in
-                    await self?.learningService.observe(
-                        originalText: enhancedText,
-                        documentType: context.documentType,
-                        timeoutSeconds: Int(timeout)
-                    )
-                    self?.learningObservationTask = nil
-                }
-
-                Logger.shared.info("Learning observation started: \(Int(timeout))s timeout for \(enhancedText.count) chars")
-            }
-
-            // Reset to ready (don't wait for learning observation)
+            // Reset to ready
             status = .ready
             currentTranscription = enhancedText
 
@@ -443,7 +404,6 @@ final class AppState: ObservableObject {
         let enhancedResult = try await textEnhancementService.enhance(
             text: text,
             documentType: context.documentType,
-            applyLearning: preferences.learningSystemEnabled,
             useCloud: preferences.externalLLMEnabled
         )
 

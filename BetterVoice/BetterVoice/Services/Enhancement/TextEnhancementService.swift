@@ -21,7 +21,6 @@ protocol TextEnhancementServiceProtocol {
     func enhance(
         text: String,
         documentType: DocumentType,
-        applyLearning: Bool,
         useCloud: Bool
     ) async throws -> EnhancedText
 }
@@ -34,7 +33,6 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
 
     private let fillerRemover = FillerWordRemover.shared
     private let formatApplier = FormatApplier.shared
-    private let learningService = LearningService.shared
     private let sentenceAnalyzer = SentenceAnalyzer()
     private let voiceCommandParser = VoiceCommandParser.shared
     private let selfCorrectionHandler = SelfCorrectionHandler.shared
@@ -51,7 +49,6 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
     func enhance(
         text: String,
         documentType: DocumentType,
-        applyLearning: Bool = false,
         useCloud: Bool = false
     ) async throws -> EnhancedText {
 
@@ -80,28 +77,6 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
                 appliedRules.append("recipient_\(recipient)")
             }
         }
-
-        // Stage 0: Auto-classify DISABLED
-        // User feedback: ML classifier causes too many mis-classifications
-        // Only use document type from voice commands or user selection
-        // TODO: Re-enable with preference flag when classification accuracy improves (target: 80%+)
-        //
-        // if documentType == .unknown && voiceCommandInstruction == nil {
-        //     if let classifier = classificationService {
-        //         do {
-        //             Logger.shared.info("🤖 Running ML classification...")
-        //             let classification = try await classifier.classify(text)
-        //             detectedType = classification.category
-        //             Logger.shared.info("✅ ML Result: \(detectedType.rawValue)")
-        //             appliedRules.append("auto_classify_\(detectedType.rawValue)")
-        //         } catch {
-        //             Logger.shared.error("❌ Auto-classification failed", error: error)
-        //             // Continue with .unknown
-        //         }
-        //     } else {
-        //         Logger.shared.warning("⚠️ No classifier available - using .unknown")
-        //     }
-        // }
 
         // If no voice command and still .unknown, keep as .unknown for generic formatting
         if documentType == .unknown && voiceCommandInstruction == nil {
@@ -170,22 +145,7 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         _ = formatResult.changes  // Track but don't store in final model
         appliedRules.append("format_\(detectedType.rawValue)")
 
-        // Stage 5: Apply Learning (if enabled)
-        var patternsApplied = 0
-        if applyLearning {
-            do {
-                let beforeLearning = enhanced
-                enhanced = try learningService.applyLearned(text: enhanced, documentType: detectedType)
-                if enhanced != beforeLearning {
-                    appliedRules.append("apply_learning")
-                    patternsApplied = 1 // Simplified count
-                }
-            } catch {
-                Logger.shared.error("Failed to apply learning patterns", error: error)
-            }
-        }
-
-        // Stage 6: Cloud Enhancement (if enabled)
+        // Stage 5: Cloud Enhancement (if enabled)
         if useCloud && prefs.externalLLMEnabled {
             do {
                 enhanced = try await applyCloudEnhancement(enhanced, documentType: detectedType)
@@ -201,7 +161,7 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
             enhancedText: enhanced,
             documentType: detectedType,  // Use detected type in result
             appliedRules: appliedRules,
-            learnedPatternsApplied: patternsApplied,
+            learnedPatternsApplied: 0,
             cloudEnhanced: useCloud,
             cloudProvider: useCloud ? "claude" : nil,
             timestamp: Date()
@@ -270,15 +230,6 @@ final class TextEnhancementService: TextEnhancementServiceProtocol {
         } else {
             return max(0.5, 1.0 - abs(1.0 - lengthRatio))
         }
-    }
-
-    // TODO: Future implementations
-
-    private func applyLearningPatterns(_ text: String, documentType: DocumentType) async throws -> String {
-        // This would query the LearningPattern database
-        // and apply user-learned preferences
-        // Placeholder for now
-        return text
     }
 
     private func applyCloudEnhancement(_ text: String, documentType: DocumentType) async throws -> String {

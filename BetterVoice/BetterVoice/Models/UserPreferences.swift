@@ -28,7 +28,6 @@ struct UserPreferences: @unchecked Sendable {
     var errorSound: String
     var pasteSound: String
     var visualOverlayEnabled: Bool
-    var learningSystemEnabled: Bool
     var externalLLMEnabled: Bool
     var externalLLMProvider: String?
     var externalLLMAPIKey: String?
@@ -45,7 +44,6 @@ struct UserPreferences: @unchecked Sendable {
     var removeFillerWords: Bool
     var autoCapitalize: Bool
     var autoPunctuate: Bool
-    var applyLearningPatterns: Bool
     var customVocabulary: [String]
 
     // Onboarding
@@ -70,7 +68,6 @@ struct UserPreferences: @unchecked Sendable {
         errorSound: String = "Basso",
         pasteSound: String = "Morse",
         visualOverlayEnabled: Bool = true,
-        learningSystemEnabled: Bool = false,  // DISABLED: Causes text corruption (see issue with 311 patterns)
         externalLLMEnabled: Bool = false,
         externalLLMProvider: String? = nil,
         externalLLMAPIKey: String? = nil,
@@ -85,7 +82,6 @@ struct UserPreferences: @unchecked Sendable {
         removeFillerWords: Bool = true,
         autoCapitalize: Bool = true,
         autoPunctuate: Bool = true,
-        applyLearningPatterns: Bool = true,
         customVocabulary: [String] = [],
         hasCompletedOnboarding: Bool = false,
         customPrompts: [String: String] = [:]
@@ -101,7 +97,6 @@ struct UserPreferences: @unchecked Sendable {
         self.errorSound = errorSound
         self.pasteSound = pasteSound
         self.visualOverlayEnabled = visualOverlayEnabled
-        self.learningSystemEnabled = learningSystemEnabled
         self.externalLLMEnabled = externalLLMEnabled
         self.externalLLMProvider = externalLLMProvider
         self.externalLLMAPIKey = externalLLMAPIKey
@@ -116,7 +111,6 @@ struct UserPreferences: @unchecked Sendable {
         self.removeFillerWords = removeFillerWords
         self.autoCapitalize = autoCapitalize
         self.autoPunctuate = autoPunctuate
-        self.applyLearningPatterns = applyLearningPatterns
         self.customVocabulary = customVocabulary
         self.hasCompletedOnboarding = hasCompletedOnboarding
         self.customPrompts = customPrompts
@@ -179,12 +173,12 @@ extension UserPreferences: Codable {
         case selectedAudioInputDeviceUID, audioFeedbackEnabled
         case recordingStartSound, recordingStopSound, processingCompleteSound
         case errorSound, pasteSound, visualOverlayEnabled
-        case learningSystemEnabled, externalLLMEnabled, externalLLMProvider
+        case externalLLMEnabled, externalLLMProvider
         case externalLLMAPIKey, llmEnhanceEmail, llmEnhanceMessage
         case llmEnhanceDocument, llmEnhanceSocial, llmEnhanceCode
         case logLevel, autoDeleteTranscriptions, autoDeleteAfterDays
         case removeFillerWords, autoCapitalize, autoPunctuate
-        case applyLearningPatterns, customVocabulary, hasCompletedOnboarding
+        case customVocabulary, hasCompletedOnboarding
         case customPrompts
     }
 
@@ -202,7 +196,6 @@ extension UserPreferences: Codable {
         errorSound = try container.decode(String.self, forKey: .errorSound)
         pasteSound = try container.decode(String.self, forKey: .pasteSound)
         visualOverlayEnabled = try container.decode(Bool.self, forKey: .visualOverlayEnabled)
-        learningSystemEnabled = try container.decode(Bool.self, forKey: .learningSystemEnabled)
         externalLLMEnabled = try container.decode(Bool.self, forKey: .externalLLMEnabled)
         externalLLMProvider = try container.decodeIfPresent(String.self, forKey: .externalLLMProvider)
         externalLLMAPIKey = try container.decodeIfPresent(String.self, forKey: .externalLLMAPIKey)
@@ -217,7 +210,6 @@ extension UserPreferences: Codable {
         removeFillerWords = try container.decode(Bool.self, forKey: .removeFillerWords)
         autoCapitalize = try container.decode(Bool.self, forKey: .autoCapitalize)
         autoPunctuate = try container.decode(Bool.self, forKey: .autoPunctuate)
-        applyLearningPatterns = try container.decode(Bool.self, forKey: .applyLearningPatterns)
         customVocabulary = try container.decode([String].self, forKey: .customVocabulary)
         hasCompletedOnboarding = try container.decode(Bool.self, forKey: .hasCompletedOnboarding)
 
@@ -239,7 +231,6 @@ extension UserPreferences: Codable {
         try container.encode(errorSound, forKey: .errorSound)
         try container.encode(pasteSound, forKey: .pasteSound)
         try container.encode(visualOverlayEnabled, forKey: .visualOverlayEnabled)
-        try container.encode(learningSystemEnabled, forKey: .learningSystemEnabled)
         try container.encode(externalLLMEnabled, forKey: .externalLLMEnabled)
         try container.encodeIfPresent(externalLLMProvider, forKey: .externalLLMProvider)
         try container.encodeIfPresent(externalLLMAPIKey, forKey: .externalLLMAPIKey)
@@ -254,7 +245,6 @@ extension UserPreferences: Codable {
         try container.encode(removeFillerWords, forKey: .removeFillerWords)
         try container.encode(autoCapitalize, forKey: .autoCapitalize)
         try container.encode(autoPunctuate, forKey: .autoPunctuate)
-        try container.encode(applyLearningPatterns, forKey: .applyLearningPatterns)
         try container.encode(customVocabulary, forKey: .customVocabulary)
         try container.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
         try container.encode(customPrompts, forKey: .customPrompts)

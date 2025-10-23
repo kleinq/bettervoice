@@ -17,6 +17,14 @@ enum SentenceType {
 
 actor SentenceAnalyzer {
 
+    // MARK: - NaturalLanguage Components
+
+    // POS tagger for question detection
+    private let tagger = NLTagger(tagSchemes: [.lexicalClass])
+
+    // Tokenizer for sentence boundary detection
+    private let tokenizer = NLTokenizer(unit: .sentence)
+
     // Common question words
     private let questionWords = Set([
         "who", "what", "when", "where", "why", "how",
@@ -34,7 +42,7 @@ actor SentenceAnalyzer {
         "show", "display", "hide", "find", "search"
     ])
 
-    /// Analyze sentence type from text
+    /// Analyze sentence type from text using NaturalLanguage framework + heuristics
     func analyzeSentenceType(_ text: String) -> SentenceType {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return .statement }
@@ -108,8 +116,79 @@ actor SentenceAnalyzer {
             return .exclamation
         }
 
+        // ENHANCED: Use NaturalLanguage POS tagging for more accurate question detection
+        if detectQuestionWithPOSTagging(trimmed) {
+            return .question
+        }
+
         // Default to statement
         return .statement
+    }
+
+    /// Use NaturalLanguage framework's part-of-speech tagging for question detection
+    private func detectQuestionWithPOSTagging(_ text: String) -> Bool {
+        tagger.string = text
+
+        var hasInterrogativePronoun = false
+        var hasInterrogativeAdverb = false
+        var hasAuxiliaryVerb = false
+        var firstTagIsVerb = false
+
+        let range = text.startIndex..<text.endIndex
+        var tokenCount = 0
+
+        tagger.enumerateTags(in: range,
+                            unit: .word,
+                            scheme: .lexicalClass,
+                            options: [.omitPunctuation, .omitWhitespace]) { tag, tokenRange in
+
+            let word = String(text[tokenRange]).lowercased()
+            tokenCount += 1
+
+            // Check first 5 words for question indicators
+            guard tokenCount <= 5 else { return false }
+
+            // Interrogative pronouns: who, what, which, whose, whom
+            if tag == .pronoun && ["who", "what", "which", "whose", "whom"].contains(word) {
+                hasInterrogativePronoun = true
+                return false // Stop - we found a strong indicator
+            }
+
+            // Interrogative adverbs: how, when, where, why
+            if tag == .adverb && ["how", "when", "where", "why"].contains(word) {
+                hasInterrogativeAdverb = true
+                return false // Stop - we found a strong indicator
+            }
+
+            // Check if first token is a verb (inverted question structure)
+            if tokenCount == 1 && tag == .verb {
+                firstTagIsVerb = true
+            }
+
+            // Auxiliary verbs at start: is, are, was, were, do, does, did, can, could, would, should, will, shall
+            if tokenCount <= 2 && tag == .verb &&
+               ["is", "are", "was", "were", "do", "does", "did",
+                "can", "could", "would", "should", "will", "shall",
+                "has", "have", "had"].contains(word) {
+                hasAuxiliaryVerb = true
+            }
+
+            return true // Continue to next token
+        }
+
+        // Question indicators:
+        // 1. Starts with interrogative pronoun/adverb (strongest)
+        if hasInterrogativePronoun || hasInterrogativeAdverb {
+            return true
+        }
+
+        // 2. Starts with auxiliary verb + pronoun (inverted structure)
+        // e.g., "Is it", "Are you", "Can we", "Would they"
+        if hasAuxiliaryVerb && firstTagIsVerb {
+            return true
+        }
+
+        return false
     }
 
     /// Apply proper punctuation based on sentence type
@@ -146,43 +225,26 @@ actor SentenceAnalyzer {
         return punctuatedSentences.joined(separator: " ")
     }
 
-    /// Split text into sentences
+    /// Split text into sentences using NaturalLanguage tokenizer (works without punctuation!)
     private func splitIntoSentences(_ text: String) -> [String] {
-        // Split on sentence boundaries (., !, ?)
-        let pattern = #"[.!?]+"#
-
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
-            return [text]
-        }
-
-        let nsString = text as NSString
-        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsString.length))
+        // Use NaturalLanguage tokenizer for intelligent sentence boundary detection
+        // This works even when punctuation is missing!
+        tokenizer.string = text
 
         var sentences: [String] = []
-        var lastEnd = 0
 
-        for match in matches {
-            let sentenceRange = NSRange(location: lastEnd, length: match.range.location - lastEnd)
-            let sentence = nsString.substring(with: sentenceRange)
+        tokenizer.enumerateTokens(in: text.startIndex..<text.endIndex) { tokenRange, _ in
+            let sentence = String(text[tokenRange])
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             if !sentence.isEmpty {
                 sentences.append(sentence)
             }
 
-            lastEnd = match.range.location + match.range.length
+            return true // Continue to next sentence
         }
 
-        // Add remaining text if any
-        if lastEnd < nsString.length {
-            let remaining = nsString.substring(from: lastEnd)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !remaining.isEmpty {
-                sentences.append(remaining)
-            }
-        }
-
-        // If no sentences were found, return the whole text
+        // Fallback: if tokenizer finds nothing, return whole text
         return sentences.isEmpty ? [text] : sentences
     }
 

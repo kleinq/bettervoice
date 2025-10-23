@@ -70,7 +70,7 @@ struct UserPreferences: @unchecked Sendable {
         errorSound: String = "Basso",
         pasteSound: String = "Morse",
         visualOverlayEnabled: Bool = true,
-        learningSystemEnabled: Bool = true,
+        learningSystemEnabled: Bool = false,  // DISABLED: Causes text corruption (see issue with 311 patterns)
         externalLLMEnabled: Bool = false,
         externalLLMProvider: String? = nil,
         externalLLMAPIKey: String? = nil,

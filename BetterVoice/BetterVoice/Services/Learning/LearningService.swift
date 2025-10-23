@@ -141,6 +141,27 @@ final class LearningService: LearningServiceProtocol {
             replacements.append(contentsOf: tokenReplacements)
         }
 
+        // SAFETY CHECK: Detect corrupted learning patterns
+        // If too many replacements or they contain suspicious characters, skip application
+        if replacements.count > 100 {
+            Logger.shared.warning("⚠️ Learning patterns appear corrupted (\(replacements.count) replacements). Skipping application. Clear learning database to fix.")
+            return text
+        }
+
+        // Check for corrupted patterns (unicode blocks, file paths, etc.)
+        let suspiciousPatterns = replacements.filter { replacement in
+            let combined = replacement.from + replacement.to
+            // Check for box drawing characters, file paths, or very long strings
+            return combined.contains("▐") || combined.contains("█") || combined.contains("▛") ||
+                   combined.contains("/") && combined.contains(".swift") ||
+                   replacement.to.count > 50
+        }
+
+        if !suspiciousPatterns.isEmpty {
+            Logger.shared.warning("⚠️ Learning patterns contain corrupted data (\(suspiciousPatterns.count) suspicious patterns). Skipping application. Clear learning database to fix.")
+            return text
+        }
+
         // Apply replacements (case-insensitive, whole word matching)
         for replacement in replacements {
             improved = applyTokenReplacement(

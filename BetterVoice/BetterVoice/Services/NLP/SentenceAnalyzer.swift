@@ -129,13 +129,19 @@ actor SentenceAnalyzer {
     private func detectQuestionWithPOSTagging(_ text: String) -> Bool {
         tagger.string = text
 
-        var hasInterrogativePronoun = false
-        var hasInterrogativeAdverb = false
+        var hasInterrogativeWord = false
         var hasAuxiliaryVerb = false
         var firstTagIsVerb = false
+        var firstWord: String?
 
         let range = text.startIndex..<text.endIndex
         var tokenCount = 0
+
+        // List of interrogative words (regardless of POS tag)
+        let interrogativeWords = Set([
+            "who", "what", "when", "where", "why", "how",
+            "which", "whose", "whom"
+        ])
 
         tagger.enumerateTags(in: range,
                             unit: .word,
@@ -145,18 +151,18 @@ actor SentenceAnalyzer {
             let word = String(text[tokenRange]).lowercased()
             tokenCount += 1
 
+            if tokenCount == 1 {
+                firstWord = word
+            }
+
             // Check first 5 words for question indicators
             guard tokenCount <= 5 else { return false }
 
-            // Interrogative pronouns: who, what, which, whose, whom
-            if tag == .pronoun && ["who", "what", "which", "whose", "whom"].contains(word) {
-                hasInterrogativePronoun = true
-                return false // Stop - we found a strong indicator
-            }
-
-            // Interrogative adverbs: how, when, where, why
-            if tag == .adverb && ["how", "when", "where", "why"].contains(word) {
-                hasInterrogativeAdverb = true
+            // ROBUST: Check for interrogative words regardless of POS tag
+            // NLTagger sometimes misclassifies "how", "what", etc.
+            if interrogativeWords.contains(word) {
+                hasInterrogativeWord = true
+                Logger.shared.debug("🔍 Question Detection: Found interrogative word '\(word)' (tag: \(tag?.rawValue ?? "nil"))")
                 return false // Stop - we found a strong indicator
             }
 
@@ -177,17 +183,20 @@ actor SentenceAnalyzer {
         }
 
         // Question indicators:
-        // 1. Starts with interrogative pronoun/adverb (strongest)
-        if hasInterrogativePronoun || hasInterrogativeAdverb {
+        // 1. Starts with interrogative word (strongest)
+        if hasInterrogativeWord {
+            Logger.shared.debug("✅ Question Detection: Classified as QUESTION (interrogative word)")
             return true
         }
 
         // 2. Starts with auxiliary verb + pronoun (inverted structure)
         // e.g., "Is it", "Are you", "Can we", "Would they"
         if hasAuxiliaryVerb && firstTagIsVerb {
+            Logger.shared.debug("✅ Question Detection: Classified as QUESTION (inverted verb)")
             return true
         }
 
+        Logger.shared.debug("❌ Question Detection: Classified as STATEMENT (first word: '\(firstWord ?? "nil")')")
         return false
     }
 

@@ -170,6 +170,26 @@ final class VoiceCommandParser {
             extractsRecipient: false,
             metadata: ["format": "search_query"]
         ),
+
+        // Capitalization patterns
+        InstructionPattern(
+            pattern: "capitalise",
+            documentType: .unknown,
+            extractsRecipient: false,
+            metadata: ["format": "capitalise", "mode": "full"]
+        ),
+        InstructionPattern(
+            pattern: "capitalize",
+            documentType: .unknown,
+            extractsRecipient: false,
+            metadata: ["format": "capitalise", "mode": "full"]
+        ),
+        InstructionPattern(
+            pattern: "initial",
+            documentType: .unknown,
+            extractsRecipient: false,
+            metadata: ["format": "capitalise", "mode": "initial"]
+        ),
     ]
 
     private init() {}

@@ -17,6 +17,12 @@ final class FormatApplier {
     // MARK: - Public Methods
 
     func apply(to text: String, documentType: DocumentType, recipient: String? = nil, metadata: [String: String] = [:]) -> (formattedText: String, changes: [String]) {
+        // Check for special formatting commands in metadata
+        if let format = metadata["format"], format == "capitalise" {
+            let mode = metadata["mode"] ?? "full"
+            return formatCapitalise(text, mode: mode)
+        }
+
         switch documentType {
         case .email:
             return formatEmail(text, recipient: recipient)
@@ -280,6 +286,31 @@ final class FormatApplier {
         // The old addPunctuation() was stripping question marks added by SentenceAnalyzer
         // because splitIntoSentences() removes all punctuation when splitting
 
+        return (formatted, changes)
+    }
+
+    // MARK: - Capitalise Formatting
+
+    private func formatCapitalise(_ text: String, mode: String) -> (String, [String]) {
+        var formatted = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var changes: [String] = []
+
+        // Remove any trailing punctuation first
+        while !formatted.isEmpty && CharacterSet(charactersIn: ".!?,;:").contains(formatted.unicodeScalars.last!) {
+            formatted = String(formatted.dropLast())
+        }
+
+        if mode == "initial" {
+            // Capitalise initial letter of each word (Title Case)
+            formatted = formatted.capitalized
+            changes.append("Capitalized initial letters")
+        } else {
+            // Capitalise entire text (UPPERCASE)
+            formatted = formatted.uppercased()
+            changes.append("Capitalized all letters")
+        }
+
+        // IMPORTANT: Never add punctuation for capitalise commands
         return (formatted, changes)
     }
 

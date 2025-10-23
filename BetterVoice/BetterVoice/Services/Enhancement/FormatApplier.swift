@@ -276,9 +276,9 @@ final class FormatApplier {
             changes.append("Capitalized first letter")
         }
 
-        // Add basic punctuation
-        formatted = addPunctuation(formatted)
-        changes.append("Added punctuation")
+        // DON'T add punctuation - Stage 3 (SentenceAnalyzer) already handled it!
+        // The old addPunctuation() was stripping question marks added by SentenceAnalyzer
+        // because splitIntoSentences() removes all punctuation when splitting
 
         return (formatted, changes)
     }

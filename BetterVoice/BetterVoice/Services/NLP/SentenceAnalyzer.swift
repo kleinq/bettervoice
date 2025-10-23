@@ -162,7 +162,7 @@ actor SentenceAnalyzer {
             // NLTagger sometimes misclassifies "how", "what", etc.
             if interrogativeWords.contains(word) {
                 hasInterrogativeWord = true
-                Logger.shared.debug("🔍 Question Detection: Found interrogative word '\(word)' (tag: \(tag?.rawValue ?? "nil"))")
+                Logger.shared.info("🔍 Question Detection: Found interrogative word '\(word)' (tag: \(tag?.rawValue ?? "nil"))")
                 return false // Stop - we found a strong indicator
             }
 
@@ -185,18 +185,18 @@ actor SentenceAnalyzer {
         // Question indicators:
         // 1. Starts with interrogative word (strongest)
         if hasInterrogativeWord {
-            Logger.shared.debug("✅ Question Detection: Classified as QUESTION (interrogative word)")
+            Logger.shared.info("✅ Question Detection: Classified as QUESTION (interrogative word)")
             return true
         }
 
         // 2. Starts with auxiliary verb + pronoun (inverted structure)
         // e.g., "Is it", "Are you", "Can we", "Would they"
         if hasAuxiliaryVerb && firstTagIsVerb {
-            Logger.shared.debug("✅ Question Detection: Classified as QUESTION (inverted verb)")
+            Logger.shared.info("✅ Question Detection: Classified as QUESTION (inverted verb)")
             return true
         }
 
-        Logger.shared.debug("❌ Question Detection: Classified as STATEMENT (first word: '\(firstWord ?? "nil")')")
+        Logger.shared.info("❌ Question Detection: Classified as STATEMENT (first word: '\(firstWord ?? "nil")')")
         return false
     }
 
@@ -208,6 +208,11 @@ actor SentenceAnalyzer {
         // Split into sentences (rough split on ., !, ?)
         let sentences = splitIntoSentences(trimmed)
 
+        Logger.shared.info("📝 Punctuation: Split into \(sentences.count) sentence(s)")
+        for (index, sentence) in sentences.enumerated() {
+            Logger.shared.info("   Sentence \(index + 1): '\(sentence)'")
+        }
+
         // Analyze and punctuate each sentence
         let punctuatedSentences = sentences.map { sentence -> String in
             var result = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -218,6 +223,8 @@ actor SentenceAnalyzer {
             }
 
             let type = analyzeSentenceType(result)
+
+            Logger.shared.info("   Analyzing: '\(result)' → Type: \(type)")
 
             switch type {
             case .question:

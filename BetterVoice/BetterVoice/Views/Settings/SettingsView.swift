@@ -45,6 +45,7 @@ struct SettingsView: View {
                 }
         }
         .frame(width: 700, height: 500)
+        .background(SettingsWindowAccessor())
     }
 }
 

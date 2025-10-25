@@ -251,24 +251,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func openSettingsWindow() {
-        // Open macOS System Settings to Security & Privacy pane
+        // Open macOS System Settings/Preferences directly
         if #available(macOS 13.0, *) {
-            // macOS 13+ (Ventura and later): Use System Settings
-            // Try to open Privacy & Security pane directly
-            if let url = URL(string: "x-apple.systemsettings:com.apple.preference.security") {
-                NSWorkspace.shared.open(url)
-                Logger.shared.info("Opened System Settings > Privacy & Security")
-            } else if let url = URL(string: "x-apple.systemsettings:") {
-                // Fallback: Just open System Settings
-                NSWorkspace.shared.open(url)
-                Logger.shared.info("Opened System Settings (main)")
-            }
+            // macOS 13+ (Ventura and later): Open System Settings app
+            let settingsURL = URL(fileURLWithPath: "/System/Applications/System Settings.app")
+            NSWorkspace.shared.open(settingsURL)
+            Logger.shared.info("Opened System Settings app")
         } else {
-            // macOS 12 and earlier: Use System Preferences
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
-                NSWorkspace.shared.open(url)
-                Logger.shared.info("Opened System Preferences > Security & Privacy > Privacy > Microphone")
-            }
+            // macOS 12 and earlier: Open System Preferences app
+            let prefsURL = URL(fileURLWithPath: "/System/Applications/System Preferences.app")
+            NSWorkspace.shared.open(prefsURL)
+            Logger.shared.info("Opened System Preferences app")
+        }
+
+        // Show an informational alert to guide the user
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            let alert = NSAlert()
+            alert.messageText = "Grant Permissions"
+            alert.informativeText = """
+            In System Settings, please navigate to:
+
+            Privacy & Security → Microphone
+            Enable BetterVoice
+
+            Privacy & Security → Accessibility
+            Enable BetterVoice
+            """
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
         }
     }
 }

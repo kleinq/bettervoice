@@ -252,18 +252,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func openSettingsWindow() {
         // Open macOS System Settings to Security & Privacy pane
-        // macOS 13+ uses "x-apple.systemsettings:" instead of "x-apple.systempreferences:"
         if #available(macOS 13.0, *) {
-            // Modern macOS: Use System Settings
-            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension") {
+            // macOS 13+ (Ventura and later): Use System Settings
+            // Try to open Privacy & Security pane directly
+            if let url = URL(string: "x-apple.systemsettings:com.apple.preference.security") {
                 NSWorkspace.shared.open(url)
                 Logger.shared.info("Opened System Settings > Privacy & Security")
+            } else if let url = URL(string: "x-apple.systemsettings:") {
+                // Fallback: Just open System Settings
+                NSWorkspace.shared.open(url)
+                Logger.shared.info("Opened System Settings (main)")
             }
         } else {
-            // Legacy macOS: Use System Preferences
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
+            // macOS 12 and earlier: Use System Preferences
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
                 NSWorkspace.shared.open(url)
-                Logger.shared.info("Opened System Preferences > Security & Privacy")
+                Logger.shared.info("Opened System Preferences > Security & Privacy > Privacy > Microphone")
             }
         }
     }

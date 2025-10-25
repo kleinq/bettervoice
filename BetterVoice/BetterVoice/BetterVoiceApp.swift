@@ -251,12 +251,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func openSettingsWindow() {
-        // Use NSApp to open settings
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-
-        // Also try the SwiftUI way
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security") {
-            // Note: This is a fallback, the Settings window should open via the selector above
+        // Open macOS System Settings to Security & Privacy pane
+        // macOS 13+ uses "x-apple.systemsettings:" instead of "x-apple.systempreferences:"
+        if #available(macOS 13.0, *) {
+            // Modern macOS: Use System Settings
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension") {
+                NSWorkspace.shared.open(url)
+                Logger.shared.info("Opened System Settings > Privacy & Security")
+            }
+        } else {
+            // Legacy macOS: Use System Preferences
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
+                NSWorkspace.shared.open(url)
+                Logger.shared.info("Opened System Preferences > Security & Privacy")
+            }
         }
     }
 }

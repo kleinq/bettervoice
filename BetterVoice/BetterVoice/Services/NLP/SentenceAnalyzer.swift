@@ -248,8 +248,19 @@ actor SentenceAnalyzer {
         tokenizer.string = text
 
         var sentences: [String] = []
+        var lastIndex = text.startIndex
 
         tokenizer.enumerateTokens(in: text.startIndex..<text.endIndex) { tokenRange, _ in
+            // Ensure we don't skip any text between sentences
+            if lastIndex < tokenRange.lowerBound {
+                // There's a gap - this means tokenizer skipped some text, include it
+                let skipped = String(text[lastIndex..<tokenRange.lowerBound])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if !skipped.isEmpty {
+                    Logger.shared.warning("⚠️ Tokenizer skipped text: '\(skipped)'")
+                }
+            }
+
             let sentence = String(text[tokenRange])
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -257,10 +268,22 @@ actor SentenceAnalyzer {
                 sentences.append(sentence)
             }
 
+            lastIndex = tokenRange.upperBound
             return true // Continue to next sentence
         }
 
-        // Fallback: if tokenizer finds nothing, return whole text
+        // Fallback: if tokenizer finds nothing OR if text has periods, use simple splitting
+        if sentences.isEmpty || text.contains(".") || text.contains("!") || text.contains("?") {
+            // Use simple splitting for better reliability when punctuation exists
+            let simpleSplit = text.components(separatedBy: CharacterSet(charactersIn: ".!?"))
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+
+            if !simpleSplit.isEmpty {
+                return simpleSplit
+            }
+        }
+
         return sentences.isEmpty ? [text] : sentences
     }
 

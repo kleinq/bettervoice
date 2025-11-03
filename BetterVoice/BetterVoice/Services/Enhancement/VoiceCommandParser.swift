@@ -25,6 +25,30 @@ final class VoiceCommandParser {
     private let instructionPatterns: [InstructionPattern] = [
         // Email patterns
         InstructionPattern(
+            pattern: "send an email to",
+            documentType: .email,
+            extractsRecipient: true,
+            metadata: ["format": "email"]
+        ),
+        InstructionPattern(
+            pattern: "sending an email to",
+            documentType: .email,
+            extractsRecipient: true,
+            metadata: ["format": "email"]
+        ),
+        InstructionPattern(
+            pattern: "send an email",
+            documentType: .email,
+            extractsRecipient: true,
+            metadata: ["format": "email"]
+        ),
+        InstructionPattern(
+            pattern: "sending an email",
+            documentType: .email,
+            extractsRecipient: true,
+            metadata: ["format": "email"]
+        ),
+        InstructionPattern(
             pattern: "write an email to",
             documentType: .email,
             extractsRecipient: true,
@@ -283,12 +307,12 @@ final class VoiceCommandParser {
         return nil
     }
 
-    /// Extracts recipient name from text (looks for name before period or comma)
+    /// Extracts recipient name from text (looks for name before period, comma, or greeting)
     /// - Returns: The recipient name and remaining content
     private func extractRecipient(from text: String) -> (recipient: String?, content: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Try to find the first sentence boundary (. or !)
+        // Strategy 1: Try to find the first sentence boundary (. or !)
         if let range = trimmed.range(of: #"[.!]"#, options: .regularExpression) {
             let recipient = String(trimmed[..<range.lowerBound])
                 .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -297,6 +321,37 @@ final class VoiceCommandParser {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             if !recipient.isEmpty && !content.isEmpty {
+                return (recipient, content)
+            }
+        }
+
+        // Strategy 2: Look for greeting patterns (Hi, Hello, Dear)
+        let greetingPatterns = ["Hi ", "Hello ", "Dear ", "Hey "]
+        for pattern in greetingPatterns {
+            if let greetingRange = trimmed.range(of: pattern, options: .caseInsensitive) {
+                // Everything before the greeting is the recipient
+                let recipient = String(trimmed[..<greetingRange.lowerBound])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                let content = String(trimmed[greetingRange.lowerBound...])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                if !recipient.isEmpty && !content.isEmpty {
+                    return (recipient, content)
+                }
+            }
+        }
+
+        // Strategy 3: Take first 1-3 words as recipient if followed by more text
+        let words = trimmed.components(separatedBy: .whitespaces)
+        if words.count > 3 {
+            // Assume first 1-2 words are the name
+            let nameWords = words.prefix(min(2, words.count - 2))
+            let recipient = nameWords.joined(separator: " ")
+            let contentWords = words.dropFirst(nameWords.count)
+            let content = contentWords.joined(separator: " ")
+
+            if !content.isEmpty {
                 return (recipient, content)
             }
         }

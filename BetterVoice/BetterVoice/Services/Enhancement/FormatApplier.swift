@@ -62,8 +62,8 @@ final class FormatApplier {
             changes.append("Added greeting\(recipient != nil ? " with recipient" : "")")
         }
 
-        // Break into paragraphs
-        formatted = addParagraphs(formatted)
+        // Break into paragraphs (preserving existing punctuation!)
+        formatted = addParagraphsPreservingPunctuation(formatted)
         changes.append("Added paragraph breaks")
 
         // Add closing if missing and text is long enough
@@ -72,9 +72,7 @@ final class FormatApplier {
             changes.append("Added closing")
         }
 
-        // Ensure proper punctuation
-        formatted = addPunctuation(formatted)
-        changes.append("Added punctuation")
+        // DON'T add punctuation - Stage 3 (SentenceAnalyzer) already handled it!
 
         return (formatted, changes)
     }
@@ -346,7 +344,7 @@ final class FormatApplier {
 
         for pattern in namePatterns {
             if let range = result.range(of: pattern, options: .caseInsensitive) {
-                let afterGreeting = result.index(after: range.upperBound)
+                let afterGreeting = range.upperBound
                 if afterGreeting < result.endIndex {
                     // Find the next word
                     let remaining = result[afterGreeting...]
@@ -383,6 +381,59 @@ final class FormatApplier {
         }
 
         return paragraphs.joined(separator: "\n\n")
+    }
+
+    /// Add paragraphs while preserving existing punctuation (doesn't strip . ! ?)
+    private func addParagraphsPreservingPunctuation(_ text: String) -> String {
+        // Split on sentence-ending punctuation but keep the punctuation
+        let pattern = "([.!?])\\s+"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return text
+        }
+
+        let nsText = text as NSString
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+
+        var sentences: [String] = []
+        var lastEnd = 0
+
+        for match in matches {
+            let sentenceRange = NSRange(location: lastEnd, length: match.range.location + 1 - lastEnd)
+            let sentence = nsText.substring(with: sentenceRange).trimmingCharacters(in: .whitespaces)
+            if !sentence.isEmpty {
+                sentences.append(sentence)
+            }
+            lastEnd = match.range.location + match.range.length
+        }
+
+        // Add remaining text
+        if lastEnd < nsText.length {
+            let remaining = nsText.substring(from: lastEnd).trimmingCharacters(in: .whitespaces)
+            if !remaining.isEmpty {
+                sentences.append(remaining)
+            }
+        }
+
+        // Group into paragraphs (2-3 sentences each)
+        var paragraphs: [String] = []
+        var currentParagraph: [String] = []
+
+        for sentence in sentences {
+            currentParagraph.append(sentence)
+
+            // Start new paragraph after 2-3 sentences
+            if currentParagraph.count >= 3 {
+                paragraphs.append(currentParagraph.joined(separator: " "))
+                currentParagraph = []
+            }
+        }
+
+        // Add remaining sentences
+        if !currentParagraph.isEmpty {
+            paragraphs.append(currentParagraph.joined(separator: " "))
+        }
+
+        return paragraphs.isEmpty ? text : paragraphs.joined(separator: "\n\n")
     }
 
     private func splitIntoSentences(_ text: String) -> [String] {

@@ -18,10 +18,31 @@ let iconSizes: [(size: CGFloat, scale: Int, filename: String)] = [
 ]
 
 func generateIcon(size: CGFloat, scale: Int, filename: String, outputDir: String) {
-    let actualSize = size * CGFloat(scale)
-    let image = NSImage(size: NSSize(width: actualSize, height: actualSize))
+    let pixelSize = Int(size * CGFloat(scale))
 
-    image.lockFocus()
+    // Create bitmap directly to ensure exact pixel dimensions
+    guard let bitmap = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: pixelSize,
+        pixelsHigh: pixelSize,
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: 0,
+        bitsPerPixel: 0
+    ) else {
+        print("✗ Failed to create bitmap for \(filename)")
+        return
+    }
+
+    // Set up graphics context
+    NSGraphicsContext.saveGraphicsState()
+    let context = NSGraphicsContext(bitmapImageRep: bitmap)
+    NSGraphicsContext.current = context
+
+    let bounds = NSRect(origin: .zero, size: NSSize(width: pixelSize, height: pixelSize))
 
     // Background gradient (blue to purple)
     let gradient = NSGradient(colors: [
@@ -29,22 +50,21 @@ func generateIcon(size: CGFloat, scale: Int, filename: String, outputDir: String
         NSColor(red: 0.5, green: 0.2, blue: 0.9, alpha: 1.0)
     ])
 
-    let bounds = NSRect(origin: .zero, size: NSSize(width: actualSize, height: actualSize))
-
     // Draw rounded square background
-    let cornerRadius = actualSize * 0.225 // macOS icon corner radius ratio
+    let cornerRadius = CGFloat(pixelSize) * 0.225 // macOS icon corner radius ratio
     let path = NSBezierPath(roundedRect: bounds, xRadius: cornerRadius, yRadius: cornerRadius)
     gradient?.draw(in: path, angle: 135)
 
     // Draw microphone symbol from SF Symbols
-    let symbolConfig = NSImage.SymbolConfiguration(pointSize: actualSize * 0.5, weight: .medium)
+    let symbolPointSize = CGFloat(pixelSize) * 0.5
+    let symbolConfig = NSImage.SymbolConfiguration(pointSize: symbolPointSize, weight: .medium)
     if let micSymbol = NSImage(systemSymbolName: "microphone.fill", accessibilityDescription: nil)?
         .withSymbolConfiguration(symbolConfig) {
 
         // Center the symbol
         let symbolSize = micSymbol.size
-        let x = (actualSize - symbolSize.width) / 2
-        let y = (actualSize - symbolSize.height) / 2
+        let x = (CGFloat(pixelSize) - symbolSize.width) / 2
+        let y = (CGFloat(pixelSize) - symbolSize.height) / 2
         let symbolRect = NSRect(x: x, y: y, width: symbolSize.width, height: symbolSize.height)
 
         // Draw white symbol
@@ -52,22 +72,21 @@ func generateIcon(size: CGFloat, scale: Int, filename: String, outputDir: String
         micSymbol.draw(in: symbolRect)
     }
 
-    image.unlockFocus()
+    NSGraphicsContext.restoreGraphicsState()
 
     // Save as PNG
-    if let tiffData = image.tiffRepresentation,
-       let bitmapImage = NSBitmapImageRep(data: tiffData),
-       let pngData = bitmapImage.representation(using: .png, properties: [:]) {
-
+    if let pngData = bitmap.representation(using: .png, properties: [:]) {
         let outputPath = "\(outputDir)/\(filename)"
         let url = URL(fileURLWithPath: outputPath)
 
         do {
             try pngData.write(to: url)
-            print("✓ Generated: \(filename)")
+            print("✓ Generated: \(filename) (\(pixelSize)x\(pixelSize)px)")
         } catch {
             print("✗ Failed to write \(filename): \(error)")
         }
+    } else {
+        print("✗ Failed to create PNG data for \(filename)")
     }
 }
 

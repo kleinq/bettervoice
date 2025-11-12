@@ -30,6 +30,7 @@ struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var preferencesStore: PreferencesStore
     @State private var permissionWarnings: [PermissionType] = []
+    @State private var pollingTask: Task<Void, Never>?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -65,6 +66,10 @@ struct MenuBarView: View {
             .padding()
             .onAppear {
                 checkPermissions()
+                startPermissionPolling()
+            }
+            .onDisappear {
+                stopPermissionPolling()
             }
 
             Divider()
@@ -218,6 +223,22 @@ struct MenuBarView: View {
         }
 
         permissionWarnings = warnings
+    }
+
+    private func startPermissionPolling() {
+        // Poll permissions every 2 seconds while menu is open
+        // This helps detect when user grants permissions in System Settings
+        pollingTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // Poll every 2 seconds
+                checkPermissions()
+            }
+        }
+    }
+
+    private func stopPermissionPolling() {
+        pollingTask?.cancel()
+        pollingTask = nil
     }
 
     private func openLogsFolder() {

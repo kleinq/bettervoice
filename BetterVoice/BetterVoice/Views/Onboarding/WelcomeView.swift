@@ -217,7 +217,7 @@ struct PermissionsStep: View {
                     .padding(.leading, 44)
                 } else if microphoneStatus == .denied {
                     Button("Open System Settings") {
-                        openSystemSettings()
+                        openMicrophoneSettings()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -246,7 +246,7 @@ struct PermissionsStep: View {
                     .padding(.leading, 44)
                 } else if accessibilityStatus == .denied {
                     Button("Open System Settings") {
-                        openSystemSettings()
+                        openAccessibilitySettings()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -310,9 +310,55 @@ struct PermissionsStep: View {
         }
     }
 
-    private func openSystemSettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
-            NSWorkspace.shared.open(url)
+    private func openMicrophoneSettings() {
+        if #available(macOS 13.0, *) {
+            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Microphone
+            let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_Microphone" of pane id "com.apple.preference.security"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if error != nil {
+                    // Fallback: Just open System Settings
+                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                }
+            }
+        } else {
+            // macOS 12 and earlier: Use URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+    }
+
+    private func openAccessibilitySettings() {
+        if #available(macOS 13.0, *) {
+            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Accessibility
+            let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if error != nil {
+                    // Fallback: Just open System Settings
+                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                }
+            }
+        } else {
+            // macOS 12 and earlier: Use URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            }
         }
     }
 }

@@ -12,6 +12,7 @@ struct PermissionsTab: View {
     @State private var accessibilityStatus: PermissionStatus = .notDetermined
     @State private var screenRecordingStatus: PermissionStatus = .notDetermined
     @State private var isRefreshing = false
+    @State private var pollingTask: Task<Void, Never>?
 
     private let permissionsManager = PermissionsManager.shared
 
@@ -136,6 +137,9 @@ struct PermissionsTab: View {
             checkPermissions()
             startPeriodicRefresh()
         }
+        .onDisappear {
+            stopPeriodicRefresh()
+        }
     }
 
     private var allPermissionsGranted: Bool {
@@ -159,11 +163,19 @@ struct PermissionsTab: View {
     }
 
     private func startPeriodicRefresh() {
-        // Refresh permissions every 2 seconds while the tab is visible
+        // Refresh permissions every 1 second while the tab is visible
         // This helps detect when user grants permissions in System Settings
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-            checkPermissions()
+        pollingTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // Poll every 1 second
+                checkPermissions()
+            }
         }
+    }
+
+    private func stopPeriodicRefresh() {
+        pollingTask?.cancel()
+        pollingTask = nil
     }
 
     private func requestMicrophonePermission() {

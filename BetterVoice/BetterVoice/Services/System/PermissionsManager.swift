@@ -133,10 +133,8 @@ final class PermissionsManager {
             let response = alert.runModal()
 
             if response == .alertFirstButtonReturn {
-                // Open System Preferences to Accessibility pane
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                    NSWorkspace.shared.open(url)
-                }
+                // Open System Settings/Preferences to Accessibility pane
+                self.openAccessibilitySettings()
             }
 
             // Check status after user action
@@ -187,10 +185,8 @@ final class PermissionsManager {
             let response = alert.runModal()
 
             if response == .alertFirstButtonReturn {
-                // Open System Preferences to Screen Recording pane
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                    NSWorkspace.shared.open(url)
-                }
+                // Open System Settings/Preferences to Screen Recording pane
+                self.openScreenRecordingSettings()
             }
 
             // Check status after user action
@@ -209,6 +205,64 @@ final class PermissionsManager {
             return "BetterVoice needs accessibility access to paste transcribed text and detect the active application."
         case .screenRecording:
             return "BetterVoice needs screen recording access to detect browser URLs for better context detection. No actual recording occurs."
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    /// Open System Settings directly to Accessibility pane
+    private func openAccessibilitySettings() {
+        if #available(macOS 13.0, *) {
+            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Accessibility
+            let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if let error = error {
+                    Logger.shared.error("Failed to open Accessibility settings via AppleScript: \(error)")
+                    // Fallback: Just open System Settings
+                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                }
+            }
+        } else {
+            // macOS 12 and earlier: Use URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+    }
+
+    /// Open System Settings directly to Screen Recording pane
+    private func openScreenRecordingSettings() {
+        if #available(macOS 13.0, *) {
+            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Screen Recording
+            let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_ScreenCapture" of pane id "com.apple.preference.security"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if let error = error {
+                    Logger.shared.error("Failed to open Screen Recording settings via AppleScript: \(error)")
+                    // Fallback: Just open System Settings
+                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                }
+            }
+        } else {
+            // macOS 12 and earlier: Use URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                NSWorkspace.shared.open(url)
+            }
         }
     }
 }

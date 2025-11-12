@@ -314,8 +314,15 @@ struct PermissionsStep: View {
     }
 
     private func openMicrophoneSettings() {
-        if #available(macOS 13.0, *) {
-            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Microphone
+        if #available(macOS 26.0, *) {
+            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Microphone") {
+                NSWorkspace.shared.open(url)
+            } else {
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            }
+        } else if #available(macOS 13.0, *) {
+            // macOS 13-25: Try AppleScript first
             let script = """
             tell application "System Settings"
                 activate
@@ -327,8 +334,10 @@ struct PermissionsStep: View {
             if let scriptObject = NSAppleScript(source: script) {
                 scriptObject.executeAndReturnError(&error)
                 if error != nil {
-                    // Fallback: Just open System Settings
-                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                    // Fallback: URL scheme
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
             }
         } else {
@@ -340,8 +349,15 @@ struct PermissionsStep: View {
     }
 
     private func openAccessibilitySettings() {
-        if #available(macOS 13.0, *) {
-            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Accessibility
+        if #available(macOS 26.0, *) {
+            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            } else {
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            }
+        } else if #available(macOS 13.0, *) {
+            // macOS 13-25: Try AppleScript first
             let script = """
             tell application "System Settings"
                 activate
@@ -353,8 +369,10 @@ struct PermissionsStep: View {
             if let scriptObject = NSAppleScript(source: script) {
                 scriptObject.executeAndReturnError(&error)
                 if error != nil {
-                    // Fallback: Just open System Settings
-                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                    // Fallback: URL scheme
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
             }
         } else {

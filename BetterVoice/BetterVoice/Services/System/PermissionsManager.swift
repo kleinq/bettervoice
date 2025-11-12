@@ -229,8 +229,20 @@ final class PermissionsManager {
 
     /// Open System Settings directly to Accessibility pane
     private func openAccessibilitySettings() {
-        if #available(macOS 13.0, *) {
-            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Accessibility
+        if #available(macOS 26.0, *) {
+            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
+            // Use direct URL opening and provide user guidance
+            Logger.shared.info("Opening System Settings for Accessibility permission (macOS Tahoe 26+)")
+
+            // Try URL scheme first
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            } else {
+                // Fallback: Just open System Settings
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            }
+        } else if #available(macOS 13.0, *) {
+            // macOS 13-25 (Ventura through macOS 25): Try AppleScript first
             let script = """
             tell application "System Settings"
                 activate
@@ -243,8 +255,10 @@ final class PermissionsManager {
                 scriptObject.executeAndReturnError(&error)
                 if let error = error {
                     Logger.shared.error("Failed to open Accessibility settings via AppleScript: \(error)")
-                    // Fallback: Just open System Settings
-                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                    // Fallback: Use URL scheme
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
             }
         } else {
@@ -257,8 +271,20 @@ final class PermissionsManager {
 
     /// Open System Settings directly to Screen Recording pane
     private func openScreenRecordingSettings() {
-        if #available(macOS 13.0, *) {
-            // macOS 13+ (Ventura and later): Use AppleScript to navigate directly to Screen Recording
+        if #available(macOS 26.0, *) {
+            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
+            // Use direct URL opening and provide user guidance
+            Logger.shared.info("Opening System Settings for Screen Recording permission (macOS Tahoe 26+)")
+
+            // Try URL scheme first
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_ScreenCapture") {
+                NSWorkspace.shared.open(url)
+            } else {
+                // Fallback: Just open System Settings
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            }
+        } else if #available(macOS 13.0, *) {
+            // macOS 13-25 (Ventura through macOS 25): Try AppleScript first
             let script = """
             tell application "System Settings"
                 activate
@@ -271,8 +297,10 @@ final class PermissionsManager {
                 scriptObject.executeAndReturnError(&error)
                 if let error = error {
                     Logger.shared.error("Failed to open Screen Recording settings via AppleScript: \(error)")
-                    // Fallback: Just open System Settings
-                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                    // Fallback: Use URL scheme
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
             }
         } else {

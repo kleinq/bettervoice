@@ -271,12 +271,33 @@ struct PermissionsStep: View {
             }
 
             if accessibilityStatus == .denied {
-                HStack {
-                    Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
-                    Text("You can enable accessibility later in System Settings > Privacy & Security > Accessibility.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(.blue)
+                        Text("Accessibility Permission Steps:")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
+                    }
+
+                    if #available(macOS 26.0, *) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("1. Click 'Open System Settings'")
+                                .font(.caption)
+                            Text("2. Navigate to Privacy & Security")
+                                .font(.caption)
+                            Text("3. Click on Accessibility")
+                                .font(.caption)
+                            Text("4. Toggle on BetterVoice")
+                                .font(.caption)
+                        }
+                        .padding(.leading, 20)
+                    } else {
+                        Text("Click 'Open System Settings' and grant permission to BetterVoice.")
+                            .font(.caption)
+                            .padding(.leading, 20)
+                    }
                 }
                 .padding()
                 .background(Color.blue.opacity(0.1))
@@ -315,13 +336,9 @@ struct PermissionsStep: View {
 
     private func openMicrophoneSettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
-            // Still uses x-apple.systempreferences URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
-                NSWorkspace.shared.open(url)
-            } else {
-                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            }
+            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
+            // Just open System Settings - user must navigate manually
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         } else if #available(macOS 13.0, *) {
             // macOS 13-25: Try AppleScript first
             let script = """
@@ -351,13 +368,9 @@ struct PermissionsStep: View {
 
     private func openAccessibilitySettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
-            // Still uses x-apple.systempreferences URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                NSWorkspace.shared.open(url)
-            } else {
-                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            }
+            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
+            // Just open System Settings - user must navigate manually
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         } else if #available(macOS 13.0, *) {
             // macOS 13-25: Try AppleScript first
             let script = """

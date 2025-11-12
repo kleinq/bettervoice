@@ -195,12 +195,9 @@ struct PermissionsTab: View {
 
     private func openMicrophoneSettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: Still uses x-apple.systempreferences URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
-                NSWorkspace.shared.open(url)
-            } else {
-                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            }
+            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
+            // Just open System Settings - user must navigate manually
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         } else if #available(macOS 13.0, *) {
             // macOS 13-25: Try AppleScript first
             let script = """
@@ -230,12 +227,9 @@ struct PermissionsTab: View {
 
     private func openAccessibilitySettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: Still uses x-apple.systempreferences URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                NSWorkspace.shared.open(url)
-            } else {
-                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            }
+            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
+            // Just open System Settings - user must navigate manually
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         } else if #available(macOS 13.0, *) {
             // macOS 13-25: Try AppleScript first
             let script = """
@@ -265,12 +259,9 @@ struct PermissionsTab: View {
 
     private func openScreenRecordingSettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: Still uses x-apple.systempreferences URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                NSWorkspace.shared.open(url)
-            } else {
-                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            }
+            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
+            // Just open System Settings - user must navigate manually
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         } else if #available(macOS 13.0, *) {
             // macOS 13-25: Try AppleScript first
             let script = """

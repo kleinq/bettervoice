@@ -136,15 +136,32 @@ final class PermissionsManager {
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.messageText = "Accessibility Permission Required"
-            alert.informativeText = """
-            BetterVoice needs accessibility permission to:
-            • Paste transcribed text into applications
-            • Detect the active application and context
 
-            Click "Open System Preferences" to grant permission.
-            """
+            // More detailed instructions for macOS Tahoe where URL navigation doesn't work
+            if #available(macOS 26.0, *) {
+                alert.informativeText = """
+                BetterVoice needs accessibility permission to:
+                • Paste transcribed text into applications
+                • Detect the active application and context
+
+                Steps to grant permission:
+                1. Click "Open System Settings"
+                2. Navigate to Privacy & Security
+                3. Click on Accessibility
+                4. Toggle on BetterVoice
+                """
+            } else {
+                alert.informativeText = """
+                BetterVoice needs accessibility permission to:
+                • Paste transcribed text into applications
+                • Detect the active application and context
+
+                Click "Open System Settings" to grant permission.
+                """
+            }
+
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "Open System Preferences")
+            alert.addButton(withTitle: "Open System Settings")
             alert.addButton(withTitle: "Cancel")
 
             let response = alert.runModal()
@@ -230,17 +247,10 @@ final class PermissionsManager {
     /// Open System Settings directly to Accessibility pane
     private func openAccessibilitySettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
-            // Use URL scheme (still uses x-apple.systempreferences on Tahoe)
-            Logger.shared.info("Opening System Settings for Accessibility permission (macOS Tahoe 26+)")
-
-            // Try URL scheme - Tahoe still uses systempreferences scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                NSWorkspace.shared.open(url)
-            } else {
-                // Fallback: Just open System Settings to Privacy & Security
-                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            }
+            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
+            // Just open System Settings - user must navigate manually
+            Logger.shared.info("Opening System Settings for manual navigation (macOS Tahoe 26+)")
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         } else if #available(macOS 13.0, *) {
             // macOS 13-25 (Ventura through macOS 25): Try AppleScript first
             let script = """
@@ -272,17 +282,10 @@ final class PermissionsManager {
     /// Open System Settings directly to Screen Recording pane
     private func openScreenRecordingSettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: AppleScript reveal anchor is broken
-            // Use URL scheme (still uses x-apple.systempreferences on Tahoe)
-            Logger.shared.info("Opening System Settings for Screen Recording permission (macOS Tahoe 26+)")
-
-            // Try URL scheme - Tahoe still uses systempreferences scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                NSWorkspace.shared.open(url)
-            } else {
-                // Fallback: Just open System Settings to Privacy & Security
-                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            }
+            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
+            // Just open System Settings - user must navigate manually
+            Logger.shared.info("Opening System Settings for manual navigation (macOS Tahoe 26+)")
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         } else if #available(macOS 13.0, *) {
             // macOS 13-25 (Ventura through macOS 25): Try AppleScript first
             let script = """

@@ -145,9 +145,12 @@ else
 fi
 echo ""
 
-# Step 3: Code signing (if requested)
+# Step 3: Code signing
+echo -e "${BLUE}🔐 Step 3: Code signing the app...${NC}"
+
 if [ "$SIGN_APP" = true ]; then
-    echo -e "${BLUE}🔐 Step 3: Code signing the app...${NC}"
+    # Sign with Developer ID
+    echo "   Using Developer ID: $DEVELOPER_ID"
 
     # Sign all frameworks first
     if [ -d "$FRAMEWORKS_DIR" ]; then
@@ -168,7 +171,26 @@ if [ "$SIGN_APP" = true ]; then
     codesign --verify --verbose "$APP_PATH"
     echo -e "${GREEN}✅ Code signing complete${NC}"
 else
-    echo -e "${YELLOW}⏭️  Step 3: Skipping code signing (ad-hoc signature will be used)${NC}"
+    # Use ad-hoc signing
+    echo "   Using ad-hoc signing (no Developer ID)"
+
+    # CRITICAL: Re-sign all frameworks with ad-hoc signature to match the main app
+    # This fixes "different Team IDs" error when copying to /Applications
+    if [ -d "$FRAMEWORKS_DIR" ]; then
+        echo "   Re-signing frameworks with ad-hoc signature..."
+        for framework in "$FRAMEWORKS_DIR"/*.dylib "$FRAMEWORKS_DIR"/*.framework; do
+            if [ -e "$framework" ]; then
+                # Remove any existing signature and apply ad-hoc signature
+                codesign --force --sign "-" "$framework" 2>/dev/null || true
+                echo "   ✓ Signed: $(basename "$framework")"
+            fi
+        done
+    fi
+
+    # Sign the app bundle with ad-hoc signature
+    codesign --force --deep --sign "-" "$APP_PATH" 2>/dev/null || true
+
+    echo -e "${GREEN}✅ Ad-hoc code signing complete${NC}"
 fi
 echo ""
 
@@ -285,16 +307,19 @@ echo "     Upload to a web server and share the download link"
 echo ""
 
 if [ "$SIGN_APP" = false ]; then
-    echo -e "${YELLOW}⚠️  IMPORTANT: App is not code signed${NC}"
-    echo "   Users will need to:"
-    echo "   1. Right-click the app and select 'Open' (first time)"
-    echo "   2. Or run: xattr -cr /Applications/${APP_NAME}.app"
+    echo -e "${YELLOW}⚠️  IMPORTANT: App uses ad-hoc code signing${NC}"
+    echo "   The app is signed but not with an Apple Developer ID."
     echo ""
-    echo "   For wider distribution, consider:"
-    echo "   • Code signing with Developer ID certificate"
-    echo "   • Notarizing with Apple"
+    echo "   Users will need to (first launch only):"
+    echo "   1. Right-click the app and select 'Open'"
+    echo "   2. Click 'Open' in the security dialog"
+    echo "   Alternative: xattr -cr /Applications/${APP_NAME}.app"
     echo ""
-    echo "   Run with --sign option to code sign:"
+    echo "   For wider distribution without warnings, consider:"
+    echo "   • Code signing with Apple Developer ID certificate"
+    echo "   • Notarizing with Apple (requires Developer account)"
+    echo ""
+    echo "   Run with --sign option for Developer ID signing:"
     echo "   $0 --sign 'Developer ID Application: Your Name (TEAM_ID)'"
     echo ""
 fi

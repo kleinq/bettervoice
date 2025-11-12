@@ -71,8 +71,12 @@ struct PermissionsTab: View {
                     Spacer()
 
                     if microphoneStatus != .granted {
-                        Button("Request") {
-                            requestMicrophonePermission()
+                        Button(microphoneStatus == .notDetermined ? "Request" : "Open Settings") {
+                            if microphoneStatus == .notDetermined {
+                                requestMicrophonePermission()
+                            } else {
+                                openMicrophoneSettings()
+                            }
                         }
                     } else {
                         Text("Granted")
@@ -97,7 +101,7 @@ struct PermissionsTab: View {
 
                     if accessibilityStatus != .granted {
                         Button("Open Settings") {
-                            requestAccessibilityPermission()
+                            openAccessibilitySettings()
                         }
                     } else {
                         Text("Granted")
@@ -122,7 +126,7 @@ struct PermissionsTab: View {
 
                     if screenRecordingStatus != .granted {
                         Button("Open Settings") {
-                            requestScreenRecordingPermission()
+                            openScreenRecordingSettings()
                         }
                     } else {
                         Text("Granted")
@@ -187,15 +191,110 @@ struct PermissionsTab: View {
         }
     }
 
-    private func requestAccessibilityPermission() {
-        permissionsManager.requestPermission(.accessibility) { status in
-            accessibilityStatus = status
+    // MARK: - Direct System Settings Navigation
+
+    private func openMicrophoneSettings() {
+        if #available(macOS 26.0, *) {
+            // macOS 26 Tahoe and later: Use URL scheme
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Microphone") {
+                NSWorkspace.shared.open(url)
+            } else {
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            }
+        } else if #available(macOS 13.0, *) {
+            // macOS 13-25: Try AppleScript first
+            let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_Microphone" of pane id "com.apple.preference.security"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if error != nil {
+                    // Fallback: URL scheme
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+            }
+        } else {
+            // macOS 12 and earlier: Use URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+                NSWorkspace.shared.open(url)
+            }
         }
     }
 
-    private func requestScreenRecordingPermission() {
-        permissionsManager.requestPermission(.screenRecording) { status in
-            screenRecordingStatus = status
+    private func openAccessibilitySettings() {
+        if #available(macOS 26.0, *) {
+            // macOS 26 Tahoe and later: Use URL scheme
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            } else {
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            }
+        } else if #available(macOS 13.0, *) {
+            // macOS 13-25: Try AppleScript first
+            let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if error != nil {
+                    // Fallback: URL scheme
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+            }
+        } else {
+            // macOS 12 and earlier: Use URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+    }
+
+    private func openScreenRecordingSettings() {
+        if #available(macOS 26.0, *) {
+            // macOS 26 Tahoe and later: Use URL scheme
+            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_ScreenCapture") {
+                NSWorkspace.shared.open(url)
+            } else {
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            }
+        } else if #available(macOS 13.0, *) {
+            // macOS 13-25: Try AppleScript first
+            let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_ScreenCapture" of pane id "com.apple.preference.security"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if error != nil {
+                    // Fallback: URL scheme
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+            }
+        } else {
+            // macOS 12 and earlier: Use URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                NSWorkspace.shared.open(url)
+            }
         }
     }
 

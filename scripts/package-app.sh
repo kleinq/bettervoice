@@ -71,6 +71,19 @@ echo "  • Build Config: ${BUILD_CONFIG}"
 echo "  • Code Signing: $([ "$SIGN_APP" = true ] && echo "Enabled ($DEVELOPER_ID)" || echo "Disabled (ad-hoc)")"
 echo ""
 
+# Extract Team ID from Developer ID if signing
+if [ "$SIGN_APP" = true ]; then
+    # Extract Team ID from "Developer ID Application: Name (TEAMID)"
+    TEAM_ID=$(echo "$DEVELOPER_ID" | sed -n 's/.*(\(.*\)).*/\1/p')
+    if [ -z "$TEAM_ID" ]; then
+        echo -e "${RED}❌ Error: Could not extract Team ID from Developer ID${NC}"
+        echo "   Expected format: 'Developer ID Application: Your Name (TEAM_ID)'"
+        exit 1
+    fi
+    echo "  • Team ID: ${TEAM_ID}"
+    echo ""
+fi
+
 # Step 1: Build the app (unless skipped)
 if [ "$SKIP_BUILD" = false ]; then
     echo -e "${BLUE}🔨 Step 1: Building ${APP_NAME}...${NC}"
@@ -84,13 +97,14 @@ if [ "$SKIP_BUILD" = false ]; then
         > /dev/null 2>&1
 
     if [ "$SIGN_APP" = true ]; then
-        # Build with code signing
+        # Build with code signing (Developer ID)
         xcodebuild build \
             -project BetterVoice.xcodeproj \
             -scheme BetterVoice \
             -configuration "${BUILD_CONFIG}" \
             -derivedDataPath "${DERIVED_DATA}" \
-            CODE_SIGN_IDENTITY="$DEVELOPER_ID"
+            CODE_SIGN_IDENTITY="$DEVELOPER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID"
     else
         # Build with ad-hoc signing (no team required)
         xcodebuild build \

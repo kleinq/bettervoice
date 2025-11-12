@@ -40,6 +40,34 @@ make run
    - Download/select Whisper models
    - Configure cloud enhancement (optional)
 
+## Distribution
+
+### For End Users
+
+**Quick Install:**
+1. Download the DMG file
+2. Drag BetterVoice.app to Applications
+3. Right-click and select "Open" (first time only)
+4. Grant required permissions
+
+See [QUICK_DISTRIBUTION_GUIDE.md](QUICK_DISTRIBUTION_GUIDE.md) for detailed installation instructions.
+
+### For Developers
+
+**Package for distribution:**
+
+```bash
+make release    # Build and create DMG in one step
+```
+
+This creates a `BetterVoice-v1.0.dmg` ready to distribute.
+
+See [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) for:
+- Detailed packaging options
+- Code signing & notarization
+- Distribution methods
+- Release checklist
+
 ## Development
 
 See [docs/BUILDING.md](docs/BUILDING.md) for detailed build instructions and troubleshooting.
@@ -49,6 +77,17 @@ See [docs/BUILDING.md](docs/BUILDING.md) for detailed build instructions and tro
 - macOS 12.0+
 - Xcode 14.0+
 - Swift 5.9+
+
+### Available Commands
+
+```bash
+make build      # Build the app in Debug mode
+make run        # Build and run the app
+make clean      # Clean build artifacts
+make package    # Package for distribution
+make release    # Build Release and create DMG
+make help       # Show all commands
+```
 
 ### Project Structure
 

@@ -10,6 +10,12 @@ import Foundation
 import AVFoundation
 import AppKit
 
+// MARK: - Notifications
+
+extension Notification.Name {
+    static let microphonePermissionChanged = Notification.Name("microphonePermissionChanged")
+}
+
 // MARK: - Permission Types
 
 enum PermissionType {
@@ -90,8 +96,19 @@ final class PermissionsManager {
     func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
         AVCaptureDevice.requestAccess(for: .audio) { granted in
             DispatchQueue.main.async {
-                completion(granted)
                 Logger.shared.info("Microphone permission: \(granted ? "granted" : "denied")")
+                completion(granted)
+
+                // Schedule a re-check after a short delay to handle race conditions
+                // where the system hasn't fully updated the authorization status yet
+                if granted {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        let verifiedStatus = self.checkMicrophonePermission()
+                        Logger.shared.info("Microphone permission verified: \(verifiedStatus)")
+                        // Post notification to update UI
+                        NotificationCenter.default.post(name: .microphonePermissionChanged, object: nil)
+                    }
+                }
             }
         }
     }

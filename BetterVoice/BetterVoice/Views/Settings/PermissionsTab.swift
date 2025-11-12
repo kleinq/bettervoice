@@ -140,6 +140,9 @@ struct PermissionsTab: View {
         .onDisappear {
             stopPeriodicRefresh()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .microphonePermissionChanged)) { _ in
+            checkPermissions()
+        }
     }
 
     private var allPermissionsGranted: Bool {

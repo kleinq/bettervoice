@@ -101,6 +101,9 @@ struct WelcomeView: View {
         .onDisappear {
             stopPermissionPolling()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .microphonePermissionChanged)) { _ in
+            checkPermissions()
+        }
     }
 
     private func checkPermissions() {

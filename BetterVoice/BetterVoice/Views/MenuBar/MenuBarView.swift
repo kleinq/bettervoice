@@ -71,6 +71,9 @@ struct MenuBarView: View {
             .onDisappear {
                 stopPermissionPolling()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .microphonePermissionChanged)) { _ in
+                checkPermissions()
+            }
 
             Divider()
 

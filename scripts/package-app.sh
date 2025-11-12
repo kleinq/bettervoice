@@ -83,13 +83,24 @@ if [ "$SKIP_BUILD" = false ]; then
         -derivedDataPath "${DERIVED_DATA}" \
         > /dev/null 2>&1
 
-    xcodebuild build \
-        -project BetterVoice.xcodeproj \
-        -scheme BetterVoice \
-        -configuration "${BUILD_CONFIG}" \
-        -derivedDataPath "${DERIVED_DATA}" \
-        CODE_SIGN_IDENTITY="${SIGN_APP:+$DEVELOPER_ID}" \
-        CODE_SIGN_IDENTITY="${SIGN_APP:-"-"}"
+    if [ "$SIGN_APP" = true ]; then
+        # Build with code signing
+        xcodebuild build \
+            -project BetterVoice.xcodeproj \
+            -scheme BetterVoice \
+            -configuration "${BUILD_CONFIG}" \
+            -derivedDataPath "${DERIVED_DATA}" \
+            CODE_SIGN_IDENTITY="$DEVELOPER_ID"
+    else
+        # Build with ad-hoc signing (no team required)
+        xcodebuild build \
+            -project BetterVoice.xcodeproj \
+            -scheme BetterVoice \
+            -configuration "${BUILD_CONFIG}" \
+            -derivedDataPath "${DERIVED_DATA}" \
+            CODE_SIGN_IDENTITY="-" \
+            DEVELOPMENT_TEAM=""
+    fi
 
     echo -e "${GREEN}✅ Build complete${NC}"
 else

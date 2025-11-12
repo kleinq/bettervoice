@@ -194,98 +194,29 @@ struct PermissionsTab: View {
     // MARK: - Direct System Settings Navigation
 
     private func openMicrophoneSettings() {
-        if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
-            // Just open System Settings - user must navigate manually
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-        } else if #available(macOS 13.0, *) {
-            // macOS 13-25: Try AppleScript first
-            let script = """
-            tell application "System Settings"
-                activate
-                reveal anchor "Privacy_Microphone" of pane id "com.apple.preference.security"
-            end tell
-            """
-
-            var error: NSDictionary?
-            if let scriptObject = NSAppleScript(source: script) {
-                scriptObject.executeAndReturnError(&error)
-                if error != nil {
-                    // Fallback: URL scheme
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
+        // Use URL scheme - works on all macOS versions including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
         } else {
-            // macOS 12 and earlier: Use URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
-                NSWorkspace.shared.open(url)
-            }
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         }
     }
 
     private func openAccessibilitySettings() {
-        if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
-            // Just open System Settings - user must navigate manually
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-        } else if #available(macOS 13.0, *) {
-            // macOS 13-25: Try AppleScript first
-            let script = """
-            tell application "System Settings"
-                activate
-                reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"
-            end tell
-            """
-
-            var error: NSDictionary?
-            if let scriptObject = NSAppleScript(source: script) {
-                scriptObject.executeAndReturnError(&error)
-                if error != nil {
-                    // Fallback: URL scheme
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
+        // Use URL scheme - works on all macOS versions including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
         } else {
-            // macOS 12 and earlier: Use URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                NSWorkspace.shared.open(url)
-            }
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         }
     }
 
     private func openScreenRecordingSettings() {
-        if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
-            // Just open System Settings - user must navigate manually
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-        } else if #available(macOS 13.0, *) {
-            // macOS 13-25: Try AppleScript first
-            let script = """
-            tell application "System Settings"
-                activate
-                reveal anchor "Privacy_ScreenCapture" of pane id "com.apple.preference.security"
-            end tell
-            """
-
-            var error: NSDictionary?
-            if let scriptObject = NSAppleScript(source: script) {
-                scriptObject.executeAndReturnError(&error)
-                if error != nil {
-                    // Fallback: URL scheme
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
+        // Use URL scheme - works on all macOS versions including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
         } else {
-            // macOS 12 and earlier: Use URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                NSWorkspace.shared.open(url)
-            }
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         }
     }
 

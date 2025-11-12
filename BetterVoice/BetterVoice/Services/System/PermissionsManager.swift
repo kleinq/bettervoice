@@ -144,11 +144,7 @@ final class PermissionsManager {
                 • Paste transcribed text into applications
                 • Detect the active application and context
 
-                Steps to grant permission:
-                1. Click "Open System Settings"
-                2. Navigate to Privacy & Security
-                3. Click on Accessibility
-                4. Toggle on BetterVoice
+                Click "Open System Settings" and toggle on BetterVoice in the Accessibility list.
                 """
             } else {
                 alert.informativeText = """
@@ -246,71 +242,27 @@ final class PermissionsManager {
 
     /// Open System Settings directly to Accessibility pane
     private func openAccessibilitySettings() {
-        if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
-            // Just open System Settings - user must navigate manually
-            Logger.shared.info("Opening System Settings for manual navigation (macOS Tahoe 26+)")
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-        } else if #available(macOS 13.0, *) {
-            // macOS 13-25 (Ventura through macOS 25): Try AppleScript first
-            let script = """
-            tell application "System Settings"
-                activate
-                reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"
-            end tell
-            """
-
-            var error: NSDictionary?
-            if let scriptObject = NSAppleScript(source: script) {
-                scriptObject.executeAndReturnError(&error)
-                if let error = error {
-                    Logger.shared.error("Failed to open Accessibility settings via AppleScript: \(error)")
-                    // Fallback: Use URL scheme
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
+        // Use URL scheme - works on all macOS versions including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+            Logger.shared.info("Opening System Settings to Privacy & Security > Accessibility")
         } else {
-            // macOS 12 and earlier: Use URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                NSWorkspace.shared.open(url)
-            }
+            // Fallback: Just open System Settings
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            Logger.shared.warning("Failed to create URL, opening System Settings to General")
         }
     }
 
     /// Open System Settings directly to Screen Recording pane
     private func openScreenRecordingSettings() {
-        if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: URL parameters don't navigate to specific panes
-            // Just open System Settings - user must navigate manually
-            Logger.shared.info("Opening System Settings for manual navigation (macOS Tahoe 26+)")
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-        } else if #available(macOS 13.0, *) {
-            // macOS 13-25 (Ventura through macOS 25): Try AppleScript first
-            let script = """
-            tell application "System Settings"
-                activate
-                reveal anchor "Privacy_ScreenCapture" of pane id "com.apple.preference.security"
-            end tell
-            """
-
-            var error: NSDictionary?
-            if let scriptObject = NSAppleScript(source: script) {
-                scriptObject.executeAndReturnError(&error)
-                if let error = error {
-                    Logger.shared.error("Failed to open Screen Recording settings via AppleScript: \(error)")
-                    // Fallback: Use URL scheme
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
+        // Use URL scheme - works on all macOS versions including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+            Logger.shared.info("Opening System Settings to Privacy & Security > Screen Recording")
         } else {
-            // macOS 12 and earlier: Use URL scheme
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                NSWorkspace.shared.open(url)
-            }
+            // Fallback: Just open System Settings
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+            Logger.shared.warning("Failed to create URL, opening System Settings to General")
         }
     }
 }

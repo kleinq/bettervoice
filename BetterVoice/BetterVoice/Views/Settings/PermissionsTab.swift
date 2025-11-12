@@ -195,8 +195,8 @@ struct PermissionsTab: View {
 
     private func openMicrophoneSettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: Use URL scheme
-            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Microphone") {
+            // macOS 26 Tahoe and later: Still uses x-apple.systempreferences URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
                 NSWorkspace.shared.open(url)
             } else {
                 NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
@@ -230,8 +230,8 @@ struct PermissionsTab: View {
 
     private func openAccessibilitySettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: Use URL scheme
-            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+            // macOS 26 Tahoe and later: Still uses x-apple.systempreferences URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
                 NSWorkspace.shared.open(url)
             } else {
                 NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
@@ -265,8 +265,8 @@ struct PermissionsTab: View {
 
     private func openScreenRecordingSettings() {
         if #available(macOS 26.0, *) {
-            // macOS 26 Tahoe and later: Use URL scheme
-            if let url = URL(string: "x-apple.systemsettings:com.apple.settings.PrivacySecurity.extension?Privacy_ScreenCapture") {
+            // macOS 26 Tahoe and later: Still uses x-apple.systempreferences URL scheme
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
                 NSWorkspace.shared.open(url)
             } else {
                 NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))

@@ -64,7 +64,9 @@ struct MenuBarView: View {
                 }
             }
             .padding()
-            .onAppear {
+            .task {
+                // Check permissions immediately when menu opens
+                // Using .task instead of .onAppear ensures this runs every time the menu is opened
                 checkPermissions()
                 startPermissionPolling()
             }
@@ -216,6 +218,8 @@ struct MenuBarView: View {
         let manager = PermissionsManager.shared
         let permissions = manager.checkAllPermissions()
 
+        Logger.shared.info("MenuBarView.checkPermissions: Microphone=\(permissions[.microphone] ?? .notDetermined), Accessibility=\(permissions[.accessibility] ?? .notDetermined)")
+
         var warnings: [PermissionType] = []
 
         if permissions[.microphone] != .granted {
@@ -225,6 +229,7 @@ struct MenuBarView: View {
             warnings.append(.accessibility)
         }
 
+        Logger.shared.info("MenuBarView.checkPermissions: Updated permissionWarnings from \(permissionWarnings.count) to \(warnings.count) warnings")
         permissionWarnings = warnings
     }
 

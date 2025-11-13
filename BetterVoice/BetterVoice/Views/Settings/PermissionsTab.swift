@@ -36,6 +36,9 @@ struct PermissionsTab: View {
                     .disabled(isRefreshing)
                 }
                 .padding(.bottom, 8)
+                .onReceive(NotificationCenter.default.publisher(for: .microphonePermissionChanged)) { _ in
+                    checkPermissions()
+                }
 
                 if allPermissionsGranted {
                     HStack {
@@ -194,8 +197,10 @@ struct PermissionsTab: View {
     // MARK: - Direct System Settings Navigation
 
     private func openMicrophoneSettings() {
-        // Use URL scheme - works on all macOS versions including Tahoe 26.1
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+        // Try modern URL scheme for macOS 13+ (Ventura, Sonoma, Sequoia, Tahoe)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
+        } else if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
             NSWorkspace.shared.open(url)
         } else {
             NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
@@ -203,8 +208,11 @@ struct PermissionsTab: View {
     }
 
     private func openAccessibilitySettings() {
-        // Use URL scheme - works on all macOS versions including Tahoe 26.1
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+        // Use URL scheme that works on macOS 13+ including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        } else if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            // Fallback for macOS 12
             NSWorkspace.shared.open(url)
         } else {
             NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
@@ -212,8 +220,10 @@ struct PermissionsTab: View {
     }
 
     private func openScreenRecordingSettings() {
-        // Use URL scheme - works on all macOS versions including Tahoe 26.1
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+        // Try modern URL scheme for macOS 13+ (Ventura, Sonoma, Sequoia, Tahoe)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        } else if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
         } else {
             NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))

@@ -80,6 +80,7 @@ final class PermissionsManager {
 
     private func checkMicrophonePermission() -> PermissionStatus {
         let status = AVCaptureDevice.authorizationStatus(for: .audio)
+        Logger.shared.info("checkMicrophonePermission: AVCaptureDevice.authorizationStatus = \(status.rawValue) (\(String(describing: status)))")
 
         switch status {
         case .authorized:
@@ -94,18 +95,36 @@ final class PermissionsManager {
     }
 
     func requestMicrophonePermission(completion: @escaping (Bool) -> Void) {
+        Logger.shared.info("requestMicrophonePermission: Starting microphone permission request")
+        let initialStatus = checkMicrophonePermission()
+        Logger.shared.info("requestMicrophonePermission: Initial status before request: \(initialStatus)")
+
         AVCaptureDevice.requestAccess(for: .audio) { granted in
             DispatchQueue.main.async {
-                Logger.shared.info("Microphone permission: \(granted ? "granted" : "denied")")
-                completion(granted)
+                Logger.shared.info("requestMicrophonePermission: System dialog returned granted=\(granted)")
 
-                // Schedule a re-check after a short delay to handle race conditions
-                // where the system hasn't fully updated the authorization status yet
-                if granted {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        let verifiedStatus = self.checkMicrophonePermission()
-                        Logger.shared.info("Microphone permission verified: \(verifiedStatus)")
-                        // Post notification to update UI
+                // Check status immediately after dialog closes
+                let immediateStatus = self.checkMicrophonePermission()
+                Logger.shared.info("requestMicrophonePermission: Immediate status check: \(immediateStatus)")
+
+                // Call completion with the actual checked status, not just the granted boolean
+                let actuallyGranted = (immediateStatus == .granted)
+                Logger.shared.info("requestMicrophonePermission: Calling completion with actuallyGranted=\(actuallyGranted)")
+                completion(actuallyGranted)
+
+                // Wait a bit longer for the system to fully process the permission change
+                // macOS may take some time to update authorization status internally
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    let verifiedStatus = self.checkMicrophonePermission()
+                    Logger.shared.info("requestMicrophonePermission: Verified status after 0.5s delay: \(verifiedStatus)")
+
+                    // Post notification after verification to update all UI
+                    NotificationCenter.default.post(name: .microphonePermissionChanged, object: nil)
+
+                    // Post again after another delay to catch any late updates
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        let finalStatus = self.checkMicrophonePermission()
+                        Logger.shared.info("requestMicrophonePermission: Final status after 1.0s delay: \(finalStatus)")
                         NotificationCenter.default.post(name: .microphonePermissionChanged, object: nil)
                     }
                 }
@@ -242,27 +261,43 @@ final class PermissionsManager {
 
     /// Open System Settings directly to Accessibility pane
     private func openAccessibilitySettings() {
-        // Use URL scheme - works on all macOS versions including Tahoe 26.1
+        // Use URL scheme that works on macOS 13+ including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+            Logger.shared.info("Opened System Settings to Privacy & Security > Accessibility")
+            return
+        }
+
+        // Fallback: Try legacy URL scheme for macOS 12
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
-            Logger.shared.info("Opening System Settings to Privacy & Security > Accessibility")
-        } else {
-            // Fallback: Just open System Settings
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            Logger.shared.warning("Failed to create URL, opening System Settings to General")
+            Logger.shared.info("Opening System Settings via legacy URL scheme")
+            return
         }
+
+        // Last resort: Just open System Settings
+        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+        Logger.shared.warning("Failed to open System Settings, using fallback")
     }
 
     /// Open System Settings directly to Screen Recording pane
     private func openScreenRecordingSettings() {
-        // Use URL scheme - works on all macOS versions including Tahoe 26.1
+        // Try modern URL scheme for macOS 13+ (Ventura, Sonoma, Sequoia, Tahoe)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+            Logger.shared.info("Opening System Settings to Privacy & Security > Screen Recording (modern scheme)")
+            return
+        }
+
+        // Fallback: Try legacy URL scheme for macOS 12
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
-            Logger.shared.info("Opening System Settings to Privacy & Security > Screen Recording")
-        } else {
-            // Fallback: Just open System Settings
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
-            Logger.shared.warning("Failed to create URL, opening System Settings to General")
+            Logger.shared.info("Opening System Settings to Privacy & Security > Screen Recording (legacy scheme)")
+            return
         }
+
+        // Last resort: Just open System Settings
+        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+        Logger.shared.warning("Failed to create URL, opening System Settings to General")
     }
 }

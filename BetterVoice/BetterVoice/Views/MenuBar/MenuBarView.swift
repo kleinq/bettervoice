@@ -30,6 +30,7 @@ struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var preferencesStore: PreferencesStore
     @State private var permissionWarnings: [PermissionType] = []
+    @State private var pollingTask: Task<Void, Never>?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -63,7 +64,16 @@ struct MenuBarView: View {
                 }
             }
             .padding()
-            .onAppear {
+            .task {
+                // Check permissions immediately when menu opens
+                // Using .task instead of .onAppear ensures this runs every time the menu is opened
+                checkPermissions()
+                startPermissionPolling()
+            }
+            .onDisappear {
+                stopPermissionPolling()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .microphonePermissionChanged)) { _ in
                 checkPermissions()
             }
 
@@ -208,6 +218,8 @@ struct MenuBarView: View {
         let manager = PermissionsManager.shared
         let permissions = manager.checkAllPermissions()
 
+        Logger.shared.info("MenuBarView.checkPermissions: Microphone=\(permissions[.microphone] ?? .notDetermined), Accessibility=\(permissions[.accessibility] ?? .notDetermined)")
+
         var warnings: [PermissionType] = []
 
         if permissions[.microphone] != .granted {
@@ -217,7 +229,24 @@ struct MenuBarView: View {
             warnings.append(.accessibility)
         }
 
+        Logger.shared.info("MenuBarView.checkPermissions: Updated permissionWarnings from \(permissionWarnings.count) to \(warnings.count) warnings")
         permissionWarnings = warnings
+    }
+
+    private func startPermissionPolling() {
+        // Poll permissions every 2 seconds while menu is open
+        // This helps detect when user grants permissions in System Settings
+        pollingTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // Poll every 2 seconds
+                checkPermissions()
+            }
+        }
+    }
+
+    private func stopPermissionPolling() {
+        pollingTask?.cancel()
+        pollingTask = nil
     }
 
     private func openLogsFolder() {

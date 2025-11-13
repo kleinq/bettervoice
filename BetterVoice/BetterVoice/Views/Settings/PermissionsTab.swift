@@ -12,6 +12,7 @@ struct PermissionsTab: View {
     @State private var accessibilityStatus: PermissionStatus = .notDetermined
     @State private var screenRecordingStatus: PermissionStatus = .notDetermined
     @State private var isRefreshing = false
+    @State private var pollingTask: Task<Void, Never>?
 
     private let permissionsManager = PermissionsManager.shared
 
@@ -35,6 +36,9 @@ struct PermissionsTab: View {
                     .disabled(isRefreshing)
                 }
                 .padding(.bottom, 8)
+                .onReceive(NotificationCenter.default.publisher(for: .microphonePermissionChanged)) { _ in
+                    checkPermissions()
+                }
 
                 if allPermissionsGranted {
                     HStack {
@@ -70,8 +74,12 @@ struct PermissionsTab: View {
                     Spacer()
 
                     if microphoneStatus != .granted {
-                        Button("Request") {
-                            requestMicrophonePermission()
+                        Button(microphoneStatus == .notDetermined ? "Request" : "Open Settings") {
+                            if microphoneStatus == .notDetermined {
+                                requestMicrophonePermission()
+                            } else {
+                                openMicrophoneSettings()
+                            }
                         }
                     } else {
                         Text("Granted")
@@ -96,7 +104,7 @@ struct PermissionsTab: View {
 
                     if accessibilityStatus != .granted {
                         Button("Open Settings") {
-                            requestAccessibilityPermission()
+                            openAccessibilitySettings()
                         }
                     } else {
                         Text("Granted")
@@ -121,7 +129,7 @@ struct PermissionsTab: View {
 
                     if screenRecordingStatus != .granted {
                         Button("Open Settings") {
-                            requestScreenRecordingPermission()
+                            openScreenRecordingSettings()
                         }
                     } else {
                         Text("Granted")
@@ -135,6 +143,12 @@ struct PermissionsTab: View {
         .onAppear {
             checkPermissions()
             startPeriodicRefresh()
+        }
+        .onDisappear {
+            stopPeriodicRefresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .microphonePermissionChanged)) { _ in
+            checkPermissions()
         }
     }
 
@@ -159,11 +173,19 @@ struct PermissionsTab: View {
     }
 
     private func startPeriodicRefresh() {
-        // Refresh permissions every 2 seconds while the tab is visible
+        // Refresh permissions every 1 second while the tab is visible
         // This helps detect when user grants permissions in System Settings
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-            checkPermissions()
+        pollingTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // Poll every 1 second
+                checkPermissions()
+            }
         }
+    }
+
+    private func stopPeriodicRefresh() {
+        pollingTask?.cancel()
+        pollingTask = nil
     }
 
     private func requestMicrophonePermission() {
@@ -172,15 +194,39 @@ struct PermissionsTab: View {
         }
     }
 
-    private func requestAccessibilityPermission() {
-        permissionsManager.requestPermission(.accessibility) { status in
-            accessibilityStatus = status
+    // MARK: - Direct System Settings Navigation
+
+    private func openMicrophoneSettings() {
+        // Try modern URL scheme for macOS 13+ (Ventura, Sonoma, Sequoia, Tahoe)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
+        } else if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
+        } else {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         }
     }
 
-    private func requestScreenRecordingPermission() {
-        permissionsManager.requestPermission(.screenRecording) { status in
-            screenRecordingStatus = status
+    private func openAccessibilitySettings() {
+        // Use URL scheme that works on macOS 13+ including Tahoe 26.1
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        } else if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            // Fallback for macOS 12
+            NSWorkspace.shared.open(url)
+        } else {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+        }
+    }
+
+    private func openScreenRecordingSettings() {
+        // Try modern URL scheme for macOS 13+ (Ventura, Sonoma, Sequoia, Tahoe)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        } else if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        } else {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
         }
     }
 

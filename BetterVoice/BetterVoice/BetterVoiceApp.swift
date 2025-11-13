@@ -161,11 +161,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if !missingPermissions.isEmpty {
                 Logger.shared.warning("Missing permissions detected: \(missingPermissions)")
 
-                // Wait a moment for the app to fully launch
-                try? await Task.sleep(nanoseconds: 500_000_000)
+                // IMPORTANT: Wait for AudioCaptureService to finish requesting microphone permission
+                // The native microphone dialog is shown during AudioCaptureService initialization
+                // We need to wait for that to complete before showing our custom alert
+                // This prevents our alert from covering the native dialog
 
-                // Show alert about missing permissions
-                showPermissionsAlert(missingPermissions: missingPermissions)
+                if missingPermissions.contains(.microphone) {
+                    Logger.shared.info("Waiting for native microphone permission dialog to complete...")
+                    // Wait up to 15 seconds for the microphone permission to be handled
+                    for _ in 0..<30 {
+                        try? await Task.sleep(nanoseconds: 500_000_000) // Check every 0.5s
+                        let currentStatus = permissionsManager.checkPermission(.microphone)
+                        if currentStatus != .notDetermined {
+                            Logger.shared.info("Microphone permission dialog completed with status: \(currentStatus)")
+                            break
+                        }
+                    }
+                } else {
+                    // No microphone permission needed, just wait a moment for app to fully launch
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                }
+
+                // Re-check permissions after waiting
+                let updatedPermissions = permissionsManager.checkAllPermissions()
+                let stillMissingPermissions = getMissingPermissions(updatedPermissions)
+
+                if !stillMissingPermissions.isEmpty {
+                    Logger.shared.info("Showing permissions alert for remaining permissions: \(stillMissingPermissions)")
+                    // Show alert about missing permissions
+                    showPermissionsAlert(missingPermissions: stillMissingPermissions)
+                }
             }
         }
 
@@ -222,13 +247,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.messageText = "Permissions Required"
 
         var message = "BetterVoice needs the following permissions to work properly:\n\n"
+        var needsAccessibility = false
 
         for permission in missingPermissions {
             switch permission {
             case .microphone:
                 message += "• Microphone: Required for voice recording\n"
+                // Microphone is handled by system dialog, skip it here
             case .accessibility:
                 message += "• Accessibility: Required for pasting transcribed text\n"
+                needsAccessibility = true
             case .screenRecording:
                 message += "• Screen Recording: Optional, for URL detection\n"
             }
@@ -244,42 +272,60 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let response = alert.runModal()
 
         if response == .alertFirstButtonReturn {
-            // Open Settings window
+            // Always open to Accessibility settings (microphone is handled by system dialog)
+            if needsAccessibility {
+                openAccessibilitySettings()
+            } else {
+                openSettingsWindow()
+            }
+        }
+    }
+
+    @MainActor
+    private func openAccessibilitySettings() {
+        // Open directly to Accessibility settings using URL scheme
+        if let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+            Logger.shared.info("Opened System Settings to Privacy & Security > Accessibility")
+        } else {
+            // Fallback
             openSettingsWindow()
         }
     }
 
     @MainActor
     private func openSettingsWindow() {
-        // Open macOS System Settings/Preferences directly
+        // Open macOS System Settings to Privacy & Security pane
         if #available(macOS 13.0, *) {
-            // macOS 13+ (Ventura and later): Open System Settings app
+            // Use AppleScript to open directly to Privacy & Security pane
+            let script = """
+            tell application "System Settings"
+                activate
+                set current pane to pane id "com.apple.settings.PrivacySecurity.extension"
+            end tell
+            """
+
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                scriptObject.executeAndReturnError(&error)
+                if error == nil {
+                    Logger.shared.info("Opened System Settings to Privacy & Security via AppleScript")
+                    return
+                } else {
+                    Logger.shared.error("AppleScript failed: \(error!)")
+                }
+            }
+        }
+
+        // Fallback: Try URL scheme for macOS 12
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security") {
+            NSWorkspace.shared.open(url)
+            Logger.shared.info("Opened System Settings via URL scheme")
+        } else {
+            // Last resort: Just open System Settings
             let settingsURL = URL(fileURLWithPath: "/System/Applications/System Settings.app")
             NSWorkspace.shared.open(settingsURL)
             Logger.shared.info("Opened System Settings app")
-        } else {
-            // macOS 12 and earlier: Open System Preferences app
-            let prefsURL = URL(fileURLWithPath: "/System/Applications/System Preferences.app")
-            NSWorkspace.shared.open(prefsURL)
-            Logger.shared.info("Opened System Preferences app")
-        }
-
-        // Show an informational alert to guide the user
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let alert = NSAlert()
-            alert.messageText = "Grant Permissions"
-            alert.informativeText = """
-            In System Settings, please navigate to:
-
-            Privacy & Security → Microphone
-            Enable BetterVoice
-
-            Privacy & Security → Accessibility
-            Enable BetterVoice
-            """
-            alert.alertStyle = .informational
-            alert.addButton(withTitle: "OK")
-            alert.runModal()
         }
     }
 }

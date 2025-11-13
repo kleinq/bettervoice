@@ -59,9 +59,35 @@ final class AudioCaptureService: AudioCaptureServiceProtocol {
     // MARK: - Initialization
 
     init() {
+        // Check permission status before warmup (to detect if dialog was shown during AVAudioEngine init)
+        let permissionBeforeInit = AVCaptureDevice.authorizationStatus(for: .audio)
+        Logger.shared.info("AudioCaptureService.init: Microphone permission at init: \(permissionBeforeInit.rawValue)")
+
         // Pre-warm audio engine to reduce first-capture latency
         Task {
             await warmUpAudioEngine()
+
+            // After warmup completes, check if permission changed from what it was at init
+            // This catches the case where the native dialog was shown during AVAudioEngine initialization
+            // On macOS Tahoe 26.1, there seems to be a significant delay before the permission status updates
+            // Let's check multiple times with increasing delays
+
+            for attempt in 1...10 {
+                let delay = UInt64(attempt * 1_000_000_000) // 1s, 2s, 3s, ... 10s
+                try? await Task.sleep(nanoseconds: delay)
+                let currentPermission = AVCaptureDevice.authorizationStatus(for: .audio)
+                Logger.shared.info("AudioCaptureService.init: Microphone permission \(attempt)s after warmup: \(currentPermission.rawValue)")
+
+                if permissionBeforeInit != currentPermission && currentPermission == .authorized {
+                    Logger.shared.info("AudioCaptureService.init: Microphone permission was granted (detected after \(attempt)s), posting notification")
+                    await MainActor.run {
+                        NotificationCenter.default.post(name: .microphonePermissionChanged, object: nil)
+                    }
+                    return // Stop checking once we detect the change
+                }
+            }
+
+            Logger.shared.warning("AudioCaptureService.init: Microphone permission never changed from \(permissionBeforeInit.rawValue) after 10 seconds")
         }
     }
 
@@ -70,7 +96,34 @@ final class AudioCaptureService: AudioCaptureServiceProtocol {
         // Configure engine without starting capture
         // This initializes audio hardware to reduce latency on first actual capture
         Logger.shared.info("Pre-warming audio engine to reduce first-capture latency")
+
+        // Check permission before warmup
+        let permissionBefore = AVCaptureDevice.authorizationStatus(for: .audio)
+        Logger.shared.info("Microphone permission before warmup: \(permissionBefore.rawValue)")
+
+        // WORKAROUND FOR MACOS TAHOE 26.1 BUG:
+        // On macOS Tahoe, accessing inputNode shows a native dialog, but clicking "Allow"
+        // doesn't actually grant permission. We need to explicitly call requestAccess.
+        if permissionBefore == .notDetermined {
+            Logger.shared.info("Permission is notDetermined, explicitly requesting microphone access...")
+
+            let granted = await withCheckedContinuation { continuation in
+                AVCaptureDevice.requestAccess(for: .audio) { granted in
+                    Logger.shared.info("Explicit requestAccess returned: \(granted)")
+                    continuation.resume(returning: granted)
+                }
+            }
+
+            if granted {
+                Logger.shared.info("Microphone permission explicitly granted, posting notification")
+                NotificationCenter.default.post(name: .microphonePermissionChanged, object: nil)
+            } else {
+                Logger.shared.warning("Microphone permission explicitly denied")
+            }
+        }
+
         do {
+            // Configure audio engine
             try configureAudioEngine()
             isEngineConfigured = true
             Logger.shared.info("Audio engine pre-warmed successfully")
